@@ -50,6 +50,16 @@
           </svg>
         </button>
 
+        <button type="button" class="icon-btn" id="history-open-btn" aria-label="Daily Reports & Accountability Log" title="Daily Reports & Proof History">
+          <svg viewBox="0 0 24 24" class="btn-icon" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </button>
+
         <button type="button" class="icon-btn" id="settings-open-btn" aria-label="Open App Settings" title="App Settings">
           <svg viewBox="0 0 24 24" class="btn-icon" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"></circle>
@@ -123,13 +133,25 @@
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-filter="completed">Done (<span id="count-done">0</span>)</button>
         </div>
 
-        <button type="button" class="btn btn-primary" id="open-add-modal-btn">
-          <svg viewBox="0 0 24 24" class="btn-icon-sm" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Add Habit
-        </button>
+        <div class="toolbar-actions">
+          <button type="button" class="btn btn-secondary-subtle" id="sync-calendar-btn" title="Export recurring alarms to iOS Reminders / Calendar / Google Calendar (.ics)">
+            <svg viewBox="0 0 24 24" class="btn-icon-sm" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            Mobile Alarms (.ics)
+          </button>
+          
+          <button type="button" class="btn btn-primary" id="open-add-modal-btn">
+            <svg viewBox="0 0 24 24" class="btn-icon-sm" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Habit
+          </button>
+        </div>
       </section>
 
       <!-- Task Cards List -->
@@ -162,7 +184,7 @@
         <p class="footer-brand">
           <strong>Recurr.ai</strong> — Super Easy & Beautiful Daily Nagging System
         </p>
-        <p class="footer-version" id="app-version-tag">v1.0.1 (updated 2026-10-17 22:25)</p>
+        <p class="footer-version" id="app-version-tag">v1.0.2 (updated 2026-10-17 23:05)</p>
       </div>
     </footer>
 
@@ -239,11 +261,28 @@
           </div>
         </div>
 
-        <!-- Custom Sub-Tracker (e.g. 2 pages of Quran) -->
-        <div class="form-group" id="sub-tracker-group">
-          <label for="task-target-count-input" class="form-label">Target Counter (e.g. 2 pages)</label>
-          <input type="number" id="task-target-count-input" class="form-input" min="1" max="100" value="1" placeholder="1">
-          <span class="form-hint">Set to 2 for "2 pages of Quran", or 1 for standard checkbox.</span>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="task-due-time-input" class="form-label">Daily Nag Start Time *</label>
+            <input type="time" id="task-due-time-input" class="form-input" value="08:00" required>
+            <span class="form-hint">Nags only start at/after this time (e.g. 8:00 AM).</span>
+          </div>
+
+          <div class="form-group">
+            <label for="task-target-count-input" class="form-label">Target Counter (e.g. 2 pages)</label>
+            <input type="number" id="task-target-count-input" class="form-input" min="1" max="100" value="1" placeholder="1">
+            <span class="form-hint">e.g. 2 for Quran pages, or 1.</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="task-safeguard-input" class="form-label">Anti-Circumvention Safeguard 🛡️</label>
+          <select id="task-safeguard-input" class="form-select">
+            <option value="strict-report" selected>🛡️ Strict Report (Requires written proof & reflection to finish)</option>
+            <option value="timed-focus">⏱️ Timed Focus + Report (Requires 2-min active timer + reflection)</option>
+            <option value="simple">🔘 Simple Checkbox (No safeguard)</option>
+          </select>
+          <span class="form-hint">Prevents you from lying or mindlessly clicking done to silence nags.</span>
         </div>
 
         <div class="modal-footer-actions">
@@ -251,6 +290,108 @@
           <button type="submit" class="btn btn-primary" id="modal-submit-btn">Save Daily Habit</button>
         </div>
       </form>
+    </div>
+  </dialog>
+
+  <!-- Accessible Modal Dialog: Anti-Circumvention Safeguard & Report -->
+  <dialog class="app-modal" id="verification-modal" closedby="any">
+    <div class="modal-dialog-content">
+      <div class="modal-header">
+        <div class="modal-header-with-badge">
+          <span class="safeguard-icon-badge">🛡️</span>
+          <div>
+            <h2 class="modal-title">Daily Verification Report</h2>
+            <p class="modal-subtitle">Anti-Circumvention Safeguard</p>
+          </div>
+        </div>
+        <form method="dialog">
+          <button type="submit" class="modal-close-btn" aria-label="Close dialog">&times;</button>
+        </form>
+      </div>
+
+      <div class="safeguard-notice">
+        <p class="safeguard-notice-text">
+          <strong>Honesty Protection:</strong> You configured this task with a safeguard so you cannot simply tap "Done" to silence your nag alarms. Please submit your proof of completion below.
+        </p>
+      </div>
+
+      <form id="verification-form" class="modal-form">
+        <input type="hidden" id="verify-task-id" value="">
+
+        <!-- Focus Timer (Optional / Enforced for Timed-Focus tasks) -->
+        <div class="focus-timer-card" id="focus-timer-card">
+          <div class="timer-top-row">
+            <div>
+              <span class="timer-label">📖 Active Focus Timer</span>
+              <p class="timer-desc">Spend at least 2 minutes engaged in your task before submitting.</p>
+            </div>
+            <div class="timer-digits" id="timer-digits-display">02:00</div>
+          </div>
+          <div class="timer-progress-track">
+            <div class="timer-progress-bar" id="timer-progress-bar"></div>
+          </div>
+          <button type="button" class="btn btn-secondary-subtle" id="start-focus-timer-btn">
+            ▶ Start 2-Minute Reading Timer
+          </button>
+        </div>
+
+        <!-- Dynamic Context Prompt Fields -->
+        <div class="form-group" id="verify-field-quran-group">
+          <label for="verify-quran-surah" class="form-label">Surah & Page Numbers *</label>
+          <span class="form-hint-format">e.g. Surah Al-Kahf, Pages 293–294</span>
+          <input type="text" id="verify-quran-surah" class="form-input" placeholder="e.g. Surah Al-Baqarah, Pages 14-15" required>
+        </div>
+
+        <div class="form-group">
+          <label for="verify-reflection-text" class="form-label" id="verify-reflection-label">Daily Reflection / What Did You Do? *</label>
+          <span class="form-hint-format">Minimum 15 characters required (brief summary or takeaway)</span>
+          <textarea id="verify-reflection-text" class="form-input report-textarea" rows="3" minlength="15" required placeholder="What was your takeaway or what specific prompt/pages did you complete?"></textarea>
+          <div class="char-count-row">
+            <span id="char-count-text">0 / 15 chars</span>
+          </div>
+        </div>
+
+        <!-- Honesty Pledge Checkbox -->
+        <div class="pledge-card">
+          <label class="pledge-label">
+            <input type="checkbox" id="verify-pledge-checkbox" class="form-checkbox" required>
+            <span>I pledge with honesty that I genuinely completed this commitment today.</span>
+          </label>
+        </div>
+
+        <div class="modal-footer-actions">
+          <button type="button" class="btn btn-secondary" id="verify-cancel-btn">I Didn't Do It Yet (Keep Nagging)</button>
+          <button type="submit" class="btn btn-primary" id="verify-submit-btn">✓ Submit Report & Mark Done</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Accessible Modal Dialog: Daily Accountability History Log -->
+  <dialog class="app-modal" id="history-modal" closedby="any">
+    <div class="modal-dialog-content">
+      <div class="modal-header">
+        <div class="modal-header-with-badge">
+          <span class="safeguard-icon-badge">📜</span>
+          <div>
+            <h2 class="modal-title">Accountability Reports Log</h2>
+            <p class="modal-subtitle">Verified history & reflections</p>
+          </div>
+        </div>
+        <form method="dialog">
+          <button type="submit" class="modal-close-btn" aria-label="Close dialog">&times;</button>
+        </form>
+      </div>
+
+      <div class="history-list-wrap" id="history-list-container">
+        <!-- Rendered reports -->
+      </div>
+
+      <div class="modal-footer-actions">
+        <form method="dialog">
+          <button type="submit" class="btn btn-secondary">Close</button>
+        </form>
+      </div>
     </div>
   </dialog>
 
@@ -281,6 +422,12 @@
             <li><strong>iPhone (Safari):</strong> Tap the <em>Share</em> button (square with arrow) at the bottom, then tap <em>"Add to Home Screen"</em>.</li>
             <li><strong>Android (Chrome):</strong> Tap the <em>3-dots menu</em>, then tap <em>"Install App"</em> or <em>"Add to Home screen"</em>.</li>
           </ul>
+        </div>
+
+        <div class="settings-card">
+          <h3 class="settings-subheading">⏰ Mobile Native Alarm & Calendar (.ics)</h3>
+          <p class="settings-desc">Export daily recurring alarms directly into iOS Reminders / Calendar or Google Calendar so your phone rings even if offline.</p>
+          <button type="button" class="btn btn-secondary" id="export-ics-btn">📅 Download Recurring Alarms (.ics)</button>
         </div>
 
         <div class="settings-card">

@@ -1,6 +1,8 @@
 /**
- * Recurr.ai — Core Application & Nag Engine
+ * Recurr.ai — Core Application & Nag Engine (v1.0.2)
  * Mobile-ready, persistent notifications & audio nag engine for daily recurring tasks.
+ * Includes Anti-Circumvention Safeguards, Reflection Reports, 8am Due-Time Schedulers,
+ * and Native Mobile Alarm (.ics) Sync.
  */
 
 // Initial Default Tasks tailored to user request
@@ -13,6 +15,8 @@ const DEFAULT_TASKS = [
     url: 'https://quran.com',
     targetCount: 2,
     currentCount: 0,
+    dueTime: '08:00',
+    safeguard: 'strict-report',
     completed: false,
     completedDate: null,
     nagIntervalMinutes: 15,
@@ -31,6 +35,8 @@ const DEFAULT_TASKS = [
     url: 'https://poe.com',
     targetCount: 1,
     currentCount: 0,
+    dueTime: '08:00',
+    safeguard: 'strict-report',
     completed: false,
     completedDate: null,
     nagIntervalMinutes: 15,
@@ -50,6 +56,8 @@ const PRESETS = {
     emoji: '📖',
     url: 'https://quran.com',
     targetCount: 2,
+    dueTime: '08:00',
+    safeguard: 'strict-report',
     nagIntervalMinutes: 15,
     nagSound: 'urgentRadar',
     voiceNag: true
@@ -59,6 +67,8 @@ const PRESETS = {
     emoji: '🤖',
     url: 'https://poe.com',
     targetCount: 1,
+    dueTime: '08:00',
+    safeguard: 'strict-report',
     nagIntervalMinutes: 15,
     nagSound: 'pleasantChime',
     voiceNag: true
@@ -68,6 +78,8 @@ const PRESETS = {
     emoji: '💧',
     url: '',
     targetCount: 8,
+    dueTime: '09:00',
+    safeguard: 'simple',
     nagIntervalMinutes: 30,
     nagSound: 'pleasantChime',
     voiceNag: false
@@ -77,6 +89,8 @@ const PRESETS = {
     emoji: '🏃',
     url: '',
     targetCount: 20,
+    dueTime: '08:00',
+    safeguard: 'strict-report',
     nagIntervalMinutes: 30,
     nagSound: 'urgentRadar',
     voiceNag: true
@@ -86,6 +100,8 @@ const PRESETS = {
     emoji: '✍️',
     url: '',
     targetCount: 1,
+    dueTime: '21:00',
+    safeguard: 'strict-report',
     nagIntervalMinutes: 60,
     nagSound: 'zenBell',
     voiceNag: false
@@ -95,6 +111,7 @@ const PRESETS = {
 class RecurrApp {
   constructor() {
     this.tasks = [];
+    this.reports = [];
     this.settings = {
       soundEnabled: true,
       voiceEnabled: true,
@@ -107,6 +124,11 @@ class RecurrApp {
     this.blinkInterval = null;
     this.originalTitle = document.title;
     this.nextNagCountdownSec = 0;
+    
+    // Focus Timer state
+    this.focusTimerInterval = null;
+    this.focusTimerTotalSec = 120; // 2 minutes
+    this.focusTimerRemainingSec = 120;
 
     this.init();
   }
@@ -138,6 +160,26 @@ class RecurrApp {
         this.saveState();
       }
 
+      const storedReports = localStorage.getItem('recurr_reports');
+      if (storedReports) {
+        this.reports = JSON.parse(storedReports);
+      } else {
+        // Sample baseline report
+        this.reports = [
+          {
+            id: 'rep-init-1',
+            taskId: 'task-quran',
+            taskTitle: 'Read 2 pages of Quran',
+            taskEmoji: '📖',
+            date: this.getTodayDateString(),
+            timestamp: 'Yesterday 08:32 AM',
+            details: 'Surah Al-Baqarah, Pages 12–13',
+            reflection: 'Completed 2 pages. Reflected on Ayat 75-82 regarding truthfulness and steadfastness.'
+          }
+        ];
+        this.saveReports();
+      }
+
       const storedSettings = localStorage.getItem('recurr_settings');
       if (storedSettings) {
         this.settings = Object.assign(this.settings, JSON.parse(storedSettings));
@@ -145,6 +187,7 @@ class RecurrApp {
     } catch (err) {
       console.error('Failed to load state from localStorage:', err);
       this.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+      this.reports = [];
     }
   }
 
@@ -157,16 +200,22 @@ class RecurrApp {
     }
   }
 
+  saveReports() {
+    try {
+      localStorage.setItem('recurr_reports', JSON.stringify(this.reports));
+    } catch (err) {
+      console.error('Failed to save reports:', err);
+    }
+  }
+
   // Check if calendar date changed to reset daily tasks and maintain streaks
   checkDailyReset() {
     const today = this.getTodayDateString();
     if (this.settings.lastActiveDate !== today) {
       this.tasks.forEach(task => {
         if (task.completed) {
-          // Maintained streak
           task.streak = (task.streak || 0) + 1;
         } else {
-          // If streak existed and day was missed, keep track or reset
           if (task.lastCompletedDate) {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
@@ -176,7 +225,6 @@ class RecurrApp {
             }
           }
         }
-        // Reset for the new day
         task.completed = false;
         task.currentCount = 0;
         task.lastNaggedTime = 0;
@@ -187,6 +235,24 @@ class RecurrApp {
       this.saveState();
       this.showToast('🌅 Good morning! Daily tasks have been reset for today.', 'toast-success');
     }
+  }
+
+  // Determine whether current local time is at or past task's due time (e.g. 08:00 AM)
+  isTaskDueNow(task) {
+    if (!task.dueTime) return true; // All day
+    const [hours, minutes] = task.dueTime.split(':').map(Number);
+    const now = new Date();
+    const due = new Date(now);
+    due.setHours(hours, minutes, 0, 0);
+    return now >= due;
+  }
+
+  formatDueTimeDisplay(timeStr) {
+    if (!timeStr) return 'All Day';
+    const [h, m] = timeStr.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const displayH = h % 12 || 12;
+    return `${displayH}:${String(m).padStart(2, '0')} ${ampm}`;
   }
 
   // Web Audio Synthesizer (No external MP3 files needed!)
@@ -341,12 +407,16 @@ class RecurrApp {
     if ('serviceWorker' in navigator) {
       try {
         this.swRegistration = await navigator.serviceWorker.register('./sw.js');
-        console.log('Recurr Service Worker active:', this.swRegistration.scope);
-
-        // Listen for messages from notification action clicks
         navigator.serviceWorker.addEventListener('message', (event) => {
           if (event.data && event.data.type === 'MARK_DONE') {
-            this.toggleTaskCompletion(event.data.taskId, true);
+            const task = this.tasks.find(t => t.id === event.data.taskId);
+            if (task) {
+              if (task.safeguard && task.safeguard !== 'simple') {
+                this.openVerificationModal(task);
+              } else {
+                this.toggleTaskCompletion(task.id, true);
+              }
+            }
           }
         });
       } catch (err) {
@@ -369,7 +439,7 @@ class RecurrApp {
         this.showToast('✅ Push Notifications enabled! Recurr will nag you on time.', 'toast-success');
         this.dispatchSystemNotification(
           'Recurr.ai Alerts Active!',
-          'You will be reminded until daily tasks like your Quran reading & Poe.com are done.'
+          'You will be reminded until daily tasks like your Quran reading & Poe.com are verified.'
         );
         return true;
       } else {
@@ -418,7 +488,7 @@ class RecurrApp {
       renotify: true,
       data: { taskId, actionUrl },
       actions: [
-        { action: 'mark-done', title: '✓ Mark Done' },
+        { action: 'mark-done', title: '✓ Submit Report' },
         ...(actionUrl ? [{ action: 'open-link', title: '🚀 Open Link' }] : [])
       ]
     };
@@ -444,19 +514,20 @@ class RecurrApp {
     const now = Date.now();
     const isGlobalSnoozed = this.settings.globalSnoozeUntil > now;
 
-    // Find all incomplete tasks that are eligible for nagging
+    // Filter incomplete tasks that ARE DUE NOW (e.g. at or after 08:00 AM)
     const incompleteTasks = this.tasks.filter(t => !t.completed);
+    const activeDueTasks = incompleteTasks.filter(t => this.isTaskDueNow(t));
     
-    if (incompleteTasks.length === 0) {
+    if (activeDueTasks.length === 0) {
       this.stopTabBlink();
-      this.updateNagBanner(0, 0);
+      this.updateNagBanner(incompleteTasks.length, 0, activeDueTasks.length);
       return;
     }
 
     let minRemainingSec = Infinity;
     let tasksToNag = [];
 
-    incompleteTasks.forEach(task => {
+    activeDueTasks.forEach(task => {
       const isTaskSnoozed = task.snoozedUntil > now;
       if (isGlobalSnoozed || isTaskSnoozed) {
         const snoozeRemain = Math.ceil(((isGlobalSnoozed ? this.settings.globalSnoozeUntil : task.snoozedUntil) - now) / 1000);
@@ -488,36 +559,28 @@ class RecurrApp {
     }
 
     const nextSec = minRemainingSec === Infinity ? 0 : minRemainingSec;
-    this.updateNagBanner(incompleteTasks.length, nextSec);
+    this.updateNagBanner(incompleteTasks.length, nextSec, activeDueTasks.length);
   }
 
   triggerTaskNag(task) {
-    // 1. Play sound
     this.playSynthesizedSound(task.nagSound || 'urgentRadar');
 
-    // 2. Haptic vibration for mobile
     if ('vibrate' in navigator) {
       navigator.vibrate([200, 100, 200, 100, 250]);
     }
 
-    // 3. Spoken voice nudge if enabled
     if (task.voiceNag) {
-      const voiceText = `Reminder! Don't forget to ${task.title}.`;
+      const voiceText = `Reminder! It is time to complete your ${task.title}. Submit your report when done.`;
       this.speakVoiceNudge(voiceText);
     }
 
-    // 4. Web Push / System Notification
-    const notifTitle = `⚡ NAG: ${task.emoji} ${task.title}`;
-    const notifBody = task.url 
-      ? `You promised to do this today! Tap to open or mark done.` 
-      : `Daily habit reminder! Keep your ${task.streak}-day streak alive!`;
+    const notifTitle = `⚡ NAG ALERT: ${task.emoji} ${task.title}`;
+    const notifBody = task.safeguard && task.safeguard !== 'simple'
+      ? `Due since ${this.formatDueTimeDisplay(task.dueTime)}! Open Recurr to submit your completion report.`
+      : `Due since ${this.formatDueTimeDisplay(task.dueTime)}! Keep your ${task.streak}-day streak alive!`;
 
     this.dispatchSystemNotification(notifTitle, notifBody, task.id, task.url);
-
-    // 5. In-App Toast
-    this.showToast(`⚡ NAG ALERT: ${task.emoji} ${task.title}! Finish it now!`, 'toast-nag');
-
-    // 6. Blink Tab Title
+    this.showToast(`⚡ NAG ALERT: ${task.emoji} ${task.title}! Time to do it!`, 'toast-nag');
     this.startTabBlink(`⚡ NAG: ${task.title}`);
   }
 
@@ -529,7 +592,6 @@ class RecurrApp {
       toggle = !toggle;
     }, 1200);
 
-    // Stop blinking when window regains focus
     window.addEventListener('focus', () => this.stopTabBlink(), { once: true });
   }
 
@@ -566,6 +628,15 @@ class RecurrApp {
       });
     }
 
+    // Reports History open button
+    const historyBtn = document.getElementById('history-open-btn');
+    if (historyBtn) {
+      historyBtn.addEventListener('click', () => {
+        this.renderReportsHistory();
+        this.openModal('history-modal');
+      });
+    }
+
     // Settings modal open
     const settingsBtn = document.getElementById('settings-open-btn');
     if (settingsBtn) {
@@ -585,10 +656,21 @@ class RecurrApp {
         this.playSynthesizedSound('urgentRadar');
         this.dispatchSystemNotification(
           '🔔 Test Nag Alert from Recurr.ai',
-          'This is how you will be nagged until your daily tasks are done!'
+          'This is how you will be nagged until your daily tasks are verified done!'
         );
         this.showToast('🚨 Test alert triggered with audio & push notification!', 'toast-nag');
       });
+    }
+
+    // Calendar .ics export button in settings & toolbar
+    const exportIcsBtn = document.getElementById('export-ics-btn');
+    if (exportIcsBtn) {
+      exportIcsBtn.addEventListener('click', () => this.exportCalendarICS());
+    }
+
+    const syncCalBtn = document.getElementById('sync-calendar-btn');
+    if (syncCalBtn) {
+      syncCalBtn.addEventListener('click', () => this.exportCalendarICS());
     }
 
     // Immediate "Nag Me Now" button in banner
@@ -655,6 +737,52 @@ class RecurrApp {
       taskForm.addEventListener('submit', (e) => {
         e.preventDefault();
         this.handleTaskFormSubmit();
+      });
+    }
+
+    // Verification Form Submit (Anti-Circumvention Safeguard)
+    const verifyForm = document.getElementById('verification-form');
+    if (verifyForm) {
+      verifyForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleVerificationSubmit();
+      });
+    }
+
+    // Verification Cancel Button
+    const verifyCancelBtn = document.getElementById('verify-cancel-btn');
+    if (verifyCancelBtn) {
+      verifyCancelBtn.addEventListener('click', () => {
+        this.stopFocusTimer();
+        this.closeModal('verification-modal');
+        this.showToast('Acknowledged: Keep going and submit report when genuinely finished.', 'toast-nag');
+      });
+    }
+
+    // Real-time character count on reflection textarea
+    const reflectionText = document.getElementById('verify-reflection-text');
+    const charCountText = document.getElementById('char-count-text');
+    if (reflectionText && charCountText) {
+      reflectionText.addEventListener('input', () => {
+        const len = reflectionText.value.trim().length;
+        charCountText.textContent = `${len} / 15 chars`;
+        if (len >= 15) {
+          charCountText.style.color = 'var(--done-success)';
+        } else {
+          charCountText.style.color = 'var(--text-dim)';
+        }
+      });
+    }
+
+    // Focus Timer Button in Verification Modal
+    const startTimerBtn = document.getElementById('start-focus-timer-btn');
+    if (startTimerBtn) {
+      startTimerBtn.addEventListener('click', () => {
+        if (this.focusTimerInterval) {
+          this.stopFocusTimer();
+        } else {
+          this.startFocusTimer();
+        }
       });
     }
 
@@ -727,7 +855,6 @@ class RecurrApp {
     const completed = this.tasks.filter(t => t.completed).length;
     const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    // Update Progress Ring
     const circle = document.getElementById('progress-circle');
     const percentVal = document.getElementById('progress-percent-val');
     const headingText = document.getElementById('progress-heading-text');
@@ -746,23 +873,21 @@ class RecurrApp {
 
     if (headingText && summaryText) {
       if (percent === 100) {
-        headingText.textContent = 'Outstanding! 🎉';
-        summaryText.textContent = `All ${total} daily tasks completed!`;
+        headingText.textContent = 'All Done Honestly! 🎉';
+        summaryText.textContent = `All ${total} daily tasks verified & completed!`;
       } else if (percent > 0) {
         headingText.textContent = 'Keep Going! 🔥';
-        summaryText.textContent = `${completed} of ${total} tasks completed today`;
+        summaryText.textContent = `${completed} of ${total} tasks verified today`;
       } else {
-        headingText.textContent = 'Get It Done! ⚡';
+        headingText.textContent = 'Daily Accountability ⚡';
         summaryText.textContent = `0 of ${total} tasks completed today`;
       }
     }
 
-    // Counts
     if (countAll) countAll.textContent = total;
     if (countNag) countNag.textContent = total - completed;
     if (countDone) countDone.textContent = completed;
 
-    // Reset Countdown
     this.updateMidnightCountdown();
   }
 
@@ -778,7 +903,7 @@ class RecurrApp {
     timerTag.textContent = `⏳ Reset in ${String(hours).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m`;
   }
 
-  updateNagBanner(incompleteCount, nextSec) {
+  updateNagBanner(totalIncomplete, nextSec, activeDueCount) {
     const banner = document.getElementById('nag-banner');
     const badgeText = document.getElementById('nag-badge-text');
     const headlineText = document.getElementById('nag-headline-text');
@@ -787,16 +912,23 @@ class RecurrApp {
 
     if (!banner) return;
 
-    if (incompleteCount === 0) {
+    if (totalIncomplete === 0) {
       banner.classList.add('all-done');
-      if (badgeText) badgeText.textContent = '✅ ALL TASKS COMPLETE';
-      if (headlineText) headlineText.textContent = 'You are completely free! No nagging needed.';
+      if (badgeText) badgeText.textContent = '✅ ALL TASKS VERIFIED';
+      if (headlineText) headlineText.textContent = 'All daily commitments completed honestly.';
       if (countdownVal) countdownVal.textContent = 'Done!';
       if (nagNowBtn) nagNowBtn.style.display = 'none';
+    } else if (activeDueCount === 0) {
+      // Incomplete tasks exist, but their scheduled time has not arrived yet!
+      banner.classList.remove('all-done');
+      if (badgeText) badgeText.textContent = '⏰ SCHEDULED (WAITING)';
+      if (headlineText) headlineText.textContent = `${totalIncomplete} daily task${totalIncomplete > 1 ? 's' : ''} scheduled for later today.`;
+      if (countdownVal) countdownVal.textContent = 'Quiet';
+      if (nagNowBtn) nagNowBtn.style.display = 'inline-flex';
     } else {
       banner.classList.remove('all-done');
-      if (badgeText) badgeText.textContent = '⚡ NAG MODE ENGAGED';
-      if (headlineText) headlineText.textContent = `${incompleteCount} daily task${incompleteCount > 1 ? 's' : ''} waiting for you!`;
+      if (badgeText) badgeText.textContent = '⚡ NAG MODE ACTIVE';
+      if (headlineText) headlineText.textContent = `${activeDueCount} daily commitment${activeDueCount > 1 ? 's' : ''} overdue & nagging!`;
       if (nagNowBtn) nagNowBtn.style.display = 'inline-flex';
 
       const mins = Math.floor(nextSec / 60);
@@ -812,7 +944,7 @@ class RecurrApp {
     if (!container) return;
 
     const filtered = this.tasks.filter(task => {
-      if (this.currentFilter === 'nagging') return !task.completed;
+      if (this.currentFilter === 'nagging') return !task.completed && this.isTaskDueNow(task);
       if (this.currentFilter === 'completed') return task.completed;
       return true;
     });
@@ -835,10 +967,10 @@ class RecurrApp {
       const cardEl = container.querySelector(`[data-id="${task.id}"]`);
       if (!cardEl) return;
 
-      // Check button
+      // Check button (Anti-Circumvention Interceptor)
       const checkBtn = cardEl.querySelector('.task-check-btn');
       if (checkBtn) {
-        checkBtn.addEventListener('click', () => this.toggleTaskCompletion(task.id));
+        checkBtn.addEventListener('click', () => this.handleTaskCheckClick(task.id));
       }
 
       // Snooze button
@@ -859,7 +991,7 @@ class RecurrApp {
         deleteBtn.addEventListener('click', () => this.deleteTask(task.id));
       }
 
-      // Multi-step counter buttons (e.g. for Quran pages)
+      // Multi-step counter buttons
       const countIncBtn = cardEl.querySelector('.counter-inc-btn');
       if (countIncBtn) {
         countIncBtn.addEventListener('click', () => this.adjustTaskCount(task.id, 1));
@@ -872,24 +1004,35 @@ class RecurrApp {
   }
 
   renderTaskCardHTML(task) {
-    const isNagging = !task.completed;
+    const isDue = this.isTaskDueNow(task);
+    const isNagging = !task.completed && isDue;
     const isCompleted = task.completed;
     const hasCounter = (task.targetCount || 1) > 1;
 
     let nagStatusPill = '';
     if (isCompleted) {
-      nagStatusPill = `<span class="nag-status-pill done">✓ Completed Today</span>`;
+      nagStatusPill = `<span class="nag-status-pill done">✓ Verified Done</span>`;
     } else if (task.snoozedUntil > Date.now()) {
       const minsLeft = Math.ceil((task.snoozedUntil - Date.now()) / (60 * 1000));
       nagStatusPill = `<span class="nag-status-pill snoozed">💤 Snoozed (${minsLeft}m left)</span>`;
+    } else if (!isDue) {
+      nagStatusPill = `<span class="due-pill">⏳ Starts at ${this.formatDueTimeDisplay(task.dueTime)}</span>`;
     } else {
       nagStatusPill = `<span class="nag-status-pill nagging">⚡ Nagging (every ${task.nagIntervalMinutes || 15}m)</span>`;
     }
 
+    const duePill = task.dueTime 
+      ? `<span class="due-pill ${isDue && !isCompleted ? 'overdue' : ''}">⏰ ${this.formatDueTimeDisplay(task.dueTime)}</span>`
+      : '';
+
+    const safeguardPill = task.safeguard && task.safeguard !== 'simple'
+      ? `<span class="safeguard-pill">🛡️ Report Required</span>`
+      : '';
+
     return `
       <article class="task-card ${isNagging ? 'is-nagging' : ''} ${isCompleted ? 'is-completed' : ''}" data-id="${task.id}">
         <div class="task-card-top">
-          <button type="button" class="task-check-btn" aria-label="${isCompleted ? 'Mark uncompleted' : 'Mark completed'}" title="${isCompleted ? 'Completed' : 'Click to complete'}">
+          <button type="button" class="task-check-btn" aria-label="${isCompleted ? 'Mark uncompleted' : 'Submit verification report'}" title="${isCompleted ? 'Completed (Click to unmark)' : 'Click to submit verification report'}">
             <svg class="task-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
@@ -903,6 +1046,8 @@ class RecurrApp {
 
             <div class="task-status-row">
               ${nagStatusPill}
+              ${duePill}
+              ${safeguardPill}
               <span class="streak-pill">🔥 ${task.streak || 0} day streak</span>
             </div>
           </div>
@@ -959,6 +1104,192 @@ class RecurrApp {
     `;
   }
 
+  // Anti-Circumvention Interceptor on Checkmark Click
+  handleTaskCheckClick(taskId) {
+    const task = this.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    if (task.completed) {
+      if (confirm(`Unmark "${task.title}" as completed? This will reopen today's nag alarms.`)) {
+        this.toggleTaskCompletion(taskId, false);
+      }
+      return;
+    }
+
+    // Safeguard verification check
+    if (task.safeguard && task.safeguard !== 'simple') {
+      this.openVerificationModal(task);
+    } else {
+      this.toggleTaskCompletion(taskId, true);
+    }
+  }
+
+  openVerificationModal(task) {
+    document.getElementById('verify-task-id').value = task.id;
+    const isQuran = task.id === 'task-quran' || task.title.toLowerCase().includes('quran');
+    const isPoe = task.id === 'task-poe' || task.title.toLowerCase().includes('poe');
+
+    const quranGroup = document.getElementById('verify-field-quran-group');
+    const reflectionLabel = document.getElementById('verify-reflection-label');
+    const reflectionInput = document.getElementById('verify-reflection-text');
+    const charCount = document.getElementById('char-count-text');
+    const pledge = document.getElementById('verify-pledge-checkbox');
+    const timerCard = document.getElementById('focus-timer-card');
+
+    // Contextual form fields
+    if (isQuran) {
+      quranGroup.style.display = 'flex';
+      reflectionLabel.textContent = "📖 Reflection on Today's 2 Pages *";
+      reflectionInput.placeholder = "Which ayah or theme resonated with you? Share at least one thoughtful takeaway...";
+      timerCard.style.display = 'flex';
+    } else if (isPoe) {
+      quranGroup.style.display = 'none';
+      reflectionLabel.textContent = "🤖 What Prompt or AI Bot Did You Consult on Poe.com? *";
+      reflectionInput.placeholder = "Describe the prompt, conversation, or AI bot (e.g. Claude 3.5, ChatGPT) you interacted with...";
+      timerCard.style.display = 'none';
+    } else {
+      quranGroup.style.display = 'none';
+      reflectionLabel.textContent = "🛡️ Accountability Proof: What Did You Accomplish? *";
+      reflectionInput.placeholder = "Summarize what you completed today with honest details...";
+      timerCard.style.display = task.safeguard === 'timed-focus' ? 'flex' : 'none';
+    }
+
+    // Reset inputs
+    reflectionInput.value = '';
+    charCount.textContent = '0 / 15 chars';
+    charCount.style.color = 'var(--text-dim)';
+    pledge.checked = false;
+    document.getElementById('verify-quran-surah').value = '';
+
+    this.stopFocusTimer();
+    this.openModal('verification-modal');
+  }
+
+  // Anti-Circumvention Verification Submission
+  handleVerificationSubmit() {
+    const taskId = document.getElementById('verify-task-id').value;
+    const task = this.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const isQuran = task.id === 'task-quran' || task.title.toLowerCase().includes('quran');
+    const surahText = document.getElementById('verify-quran-surah').value.trim();
+    const reflection = document.getElementById('verify-reflection-text').value.trim();
+    const pledge = document.getElementById('verify-pledge-checkbox').checked;
+
+    // Strict Anti-Cheat Validations
+    if (!pledge) {
+      this.showToast('⚠️ You must check the Honesty Pledge before submitting.', 'toast-nag');
+      return;
+    }
+
+    if (isQuran && !surahText) {
+      this.showToast('⚠️ Please specify the Surah & Pages read today.', 'toast-nag');
+      document.getElementById('verify-quran-surah').focus();
+      return;
+    }
+
+    if (reflection.length < 15) {
+      this.showToast('⚠️ Reflection is too short. Minimum 15 characters of real reflection required.', 'toast-nag');
+      document.getElementById('verify-reflection-text').focus();
+      return;
+    }
+
+    // Filter out low-effort dummy bypass spam
+    const lower = reflection.toLowerCase();
+    const bannedBypasses = ['done', 'yes', 'asdf', 'test', 'completed', 'ok', 'did it', 'read it'];
+    if (bannedBypasses.some(b => lower === b || lower === b.repeat(3))) {
+      this.showToast('🛡️ Safeguard Alert: Meaningful report required. Generic words are not accepted.', 'toast-nag');
+      return;
+    }
+
+    // Record verified report in audit history
+    const newReport = {
+      id: 'rep-' + Date.now(),
+      taskId: task.id,
+      taskTitle: task.title,
+      taskEmoji: task.emoji,
+      date: this.getTodayDateString(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      details: isQuran ? surahText : (task.url || ''),
+      reflection: reflection
+    };
+
+    this.reports.unshift(newReport);
+    this.saveReports();
+
+    // Mark task completed
+    this.toggleTaskCompletion(task.id, true);
+    this.closeModal('verification-modal');
+    this.stopFocusTimer();
+
+    this.showToast(`🛡️ Verified & Logged: "${task.title}" completed honestly!`, 'toast-success');
+  }
+
+  // Focus Reading Timer (2-Minute Stopwatch)
+  startFocusTimer() {
+    this.focusTimerRemainingSec = 120;
+    const display = document.getElementById('timer-digits-display');
+    const bar = document.getElementById('timer-progress-bar');
+    const btn = document.getElementById('start-focus-timer-btn');
+    if (btn) btn.textContent = '⏸ Pause Reading Timer';
+
+    this.focusTimerInterval = setInterval(() => {
+      this.focusTimerRemainingSec--;
+      const m = Math.floor(this.focusTimerRemainingSec / 60);
+      const s = this.focusTimerRemainingSec % 60;
+      if (display) display.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      if (bar) {
+        const percent = ((120 - this.focusTimerRemainingSec) / 120) * 100;
+        bar.style.width = `${percent}%`;
+      }
+
+      if (this.focusTimerRemainingSec <= 0) {
+        this.stopFocusTimer();
+        this.playSynthesizedSound('zenBell');
+        this.showToast('🔔 2-Minute Reading Focus Complete! Write your reflection below.', 'toast-success');
+        const textarea = document.getElementById('verify-reflection-text');
+        if (textarea) textarea.focus();
+      }
+    }, 1000);
+  }
+
+  stopFocusTimer() {
+    if (this.focusTimerInterval) {
+      clearInterval(this.focusTimerInterval);
+      this.focusTimerInterval = null;
+    }
+    const btn = document.getElementById('start-focus-timer-btn');
+    if (btn) btn.textContent = '▶ Start 2-Minute Reading Timer';
+  }
+
+  // Render History Modal
+  renderReportsHistory() {
+    const list = document.getElementById('history-list-container');
+    if (!list) return;
+
+    if (this.reports.length === 0) {
+      list.innerHTML = `
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+          <p style="font-size: 1.8rem; margin-bottom: 0.5rem;">📜</p>
+          <p>No verified reports logged yet.</p>
+          <p style="font-size: 0.8rem; margin-top: 0.25rem;">Complete your daily commitments with safeguards to build your audit log!</p>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = this.reports.map(rep => `
+      <article class="history-card">
+        <div class="history-card-header">
+          <span class="history-task-title">${rep.taskEmoji || '⚡'} ${this.escapeHTML(rep.taskTitle)}</span>
+          <span class="history-timestamp">${rep.date} at ${rep.timestamp}</span>
+        </div>
+        ${rep.details ? `<div class="history-meta">📍 ${this.escapeHTML(rep.details)}</div>` : ''}
+        <div class="history-reflection">"${this.escapeHTML(rep.reflection)}"</div>
+      </article>
+    `).join('');
+  }
+
   // Toggle Completion
   toggleTaskCompletion(taskId, forceState = null) {
     const task = this.tasks.find(t => t.id === taskId);
@@ -973,7 +1304,6 @@ class RecurrApp {
       task.lastCompletedDate = task.completedDate;
       this.playSynthesizedSound('celebrate');
       this.launchConfetti();
-      this.showToast(`🎉 Done! "${task.title}" checked off for today!`, 'toast-success');
       this.stopTabBlink();
     } else {
       task.currentCount = 0;
@@ -992,7 +1322,11 @@ class RecurrApp {
     task.currentCount = Math.max(0, Math.min(task.targetCount || 1, (task.currentCount || 0) + delta));
     if (task.currentCount >= task.targetCount) {
       if (!task.completed) {
-        this.toggleTaskCompletion(taskId, true);
+        if (task.safeguard && task.safeguard !== 'simple') {
+          this.openVerificationModal(task);
+        } else {
+          this.toggleTaskCompletion(taskId, true);
+        }
         return;
       }
     } else {
@@ -1028,6 +1362,57 @@ class RecurrApp {
     }
   }
 
+  // Export Native Calendar (.ics) with Recurring Daily Alarms
+  exportCalendarICS() {
+    const pad = (n) => String(n).padStart(2, '0');
+    const now = new Date();
+    const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}T${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}Z`;
+
+    let icsLines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Recurr.ai//Habit Nag Engine//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH'
+    ];
+
+    this.tasks.forEach(task => {
+      const time = task.dueTime || '08:00';
+      const [hh, mm] = time.split(':');
+      const dtstart = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}T${hh}${mm}00`;
+
+      icsLines.push(
+        'BEGIN:VEVENT',
+        `UID:recurr-${task.id}-${Date.now()}@recurr.ai`,
+        `DTSTAMP:${stamp}`,
+        `DTSTART:${dtstart}`,
+        'RRULE:FREQ=DAILY',
+        `SUMMARY:⚡ Recurr: ${task.emoji} ${task.title}`,
+        `DESCRIPTION:Daily commitment scheduled at ${this.formatDueTimeDisplay(task.dueTime)}. Open Recurr.ai to submit your verification report. ${task.url || ''}`,
+        'BEGIN:VALARM',
+        'TRIGGER:-PT0M',
+        'ACTION:DISPLAY',
+        `DESCRIPTION:⚡ Nag Alarm: Time for ${task.title}!`,
+        'END:VALARM',
+        'END:VEVENT'
+      );
+    });
+
+    icsLines.push('END:VCALENDAR');
+
+    const blob = new Blob([icsLines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `recurr_daily_8am_alarms.ics`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+    this.showToast('📅 Downloaded alarms! Tap the file to add 8:00 AM recurring alarms to your iPhone/Android calendar.', 'toast-success');
+  }
+
   // Modal Dialog Controllers
   openModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -1048,6 +1433,8 @@ class RecurrApp {
     document.getElementById('task-id-input').value = '';
     document.getElementById('task-title-input').value = '';
     document.getElementById('task-emoji-input').value = '📖';
+    document.getElementById('task-due-time-input').value = '08:00';
+    document.getElementById('task-safeguard-input').value = 'strict-report';
     document.getElementById('task-nag-interval-input').value = '15';
     document.getElementById('task-url-input').value = '';
     document.getElementById('task-sound-input').value = 'pleasantChime';
@@ -1063,6 +1450,8 @@ class RecurrApp {
     document.getElementById('task-id-input').value = task.id;
     document.getElementById('task-title-input').value = task.title;
     document.getElementById('task-emoji-input').value = task.emoji || '⚡';
+    document.getElementById('task-due-time-input').value = task.dueTime || '08:00';
+    document.getElementById('task-safeguard-input').value = task.safeguard || 'strict-report';
     document.getElementById('task-nag-interval-input').value = String(task.nagIntervalMinutes || 15);
     document.getElementById('task-url-input').value = task.url || '';
     document.getElementById('task-sound-input').value = task.nagSound || 'pleasantChime';
@@ -1077,6 +1466,8 @@ class RecurrApp {
     document.getElementById('task-title-input').value = preset.title;
     document.getElementById('task-emoji-input').value = preset.emoji;
     document.getElementById('task-url-input').value = preset.url || '';
+    document.getElementById('task-due-time-input').value = preset.dueTime || '08:00';
+    document.getElementById('task-safeguard-input').value = preset.safeguard || 'strict-report';
     document.getElementById('task-nag-interval-input').value = String(preset.nagIntervalMinutes || 15);
     document.getElementById('task-sound-input').value = preset.nagSound || 'pleasantChime';
     document.getElementById('task-voice-toggle').checked = !!preset.voiceNag;
@@ -1089,6 +1480,8 @@ class RecurrApp {
     const id = document.getElementById('task-id-input').value;
     const title = document.getElementById('task-title-input').value.trim();
     const emoji = document.getElementById('task-emoji-input').value;
+    const dueTime = document.getElementById('task-due-time-input').value || '08:00';
+    const safeguard = document.getElementById('task-safeguard-input').value || 'strict-report';
     const interval = parseInt(document.getElementById('task-nag-interval-input').value, 10) || 15;
     const url = document.getElementById('task-url-input').value.trim();
     const sound = document.getElementById('task-sound-input').value;
@@ -1098,11 +1491,12 @@ class RecurrApp {
     if (!title) return;
 
     if (id) {
-      // Edit existing
       const task = this.tasks.find(t => t.id === id);
       if (task) {
         task.title = title;
         task.emoji = emoji;
+        task.dueTime = dueTime;
+        task.safeguard = safeguard;
         task.nagIntervalMinutes = interval;
         task.url = url;
         task.nagSound = sound;
@@ -1110,12 +1504,13 @@ class RecurrApp {
         task.targetCount = targetCount;
       }
     } else {
-      // Create new
       const newTask = {
         id: 'task-' + Date.now(),
         title,
         emoji,
         url,
+        dueTime,
+        safeguard,
         targetCount,
         currentCount: 0,
         completed: false,
@@ -1134,7 +1529,7 @@ class RecurrApp {
     this.saveState();
     this.closeModal('task-modal');
     this.render();
-    this.showToast(`Saved habit "${title}"!`, 'toast-success');
+    this.showToast(`Saved habit "${title}" (Due: ${this.formatDueTimeDisplay(dueTime)})!`, 'toast-success');
   }
 
   // Confetti Particle Explosion
@@ -1168,7 +1563,7 @@ class RecurrApp {
       particles.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.42; // gravity
+        p.vy += 0.42;
         p.rotation += p.vRot;
         p.alpha -= 0.012;
 
@@ -1220,6 +1615,7 @@ class RecurrApp {
   exportData() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
       tasks: this.tasks,
+      reports: this.reports,
       settings: this.settings,
       exportedAt: new Date().toISOString()
     }, null, 2));

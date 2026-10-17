@@ -1,5 +1,5 @@
 // Service Worker for Recurr.ai PWA
-const CACHE_NAME = 'recurr-ai-v1.0.1';
+const CACHE_NAME = 'recurr-ai-v1.0.2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
