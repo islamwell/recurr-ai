@@ -125,6 +125,42 @@
         </div>
       </section>
 
+      <!-- 28-Day Consistency Streak Heatmap -->
+      <section class="heatmap-section" aria-label="Habit Consistency Matrix">
+        <div class="heatmap-card">
+          <div class="heatmap-header">
+            <div class="heatmap-title-group">
+              <span class="heatmap-icon">📊</span>
+              <h3 class="heatmap-title">28-Day Consistency Matrix</h3>
+            </div>
+            <span class="heatmap-stat" id="heatmap-stat-text">92% Consistency</span>
+          </div>
+          <div class="heatmap-grid" id="heatmap-grid-container">
+            <!-- 28 Day cells dynamically rendered -->
+          </div>
+          <div class="heatmap-legend">
+            <span class="legend-text">Less</span>
+            <span class="legend-dot lvl-0"></span>
+            <span class="legend-dot lvl-1"></span>
+            <span class="legend-dot lvl-2"></span>
+            <span class="legend-dot lvl-3"></span>
+            <span class="legend-text">Verified</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- PWA Mobile Install Banner (Visible when not standalone) -->
+      <div id="pwa-install-banner" class="install-card-banner" style="display: none;">
+        <div class="install-banner-left">
+          <span class="install-banner-icon">📱</span>
+          <div>
+            <div class="install-banner-title">Install Recurr for Mobile Alarms</div>
+            <p class="install-banner-sub">Tap <strong>Share</strong> then <strong>"Add to Home Screen"</strong> for locked-screen audio alarms.</p>
+          </div>
+        </div>
+        <button type="button" class="btn-dismiss-install" id="dismiss-install-banner" aria-label="Dismiss banner">&times;</button>
+      </div>
+
       <!-- Filter & Action Controls -->
       <section class="tasks-toolbar">
         <div class="filter-tabs" role="tablist" aria-label="Task Status Filter">
@@ -134,6 +170,10 @@
         </div>
 
         <div class="toolbar-actions">
+          <button type="button" class="btn btn-secondary-subtle" id="open-quran-reader-btn" title="Open built-in 2-page Quran reader with screen keep-awake">
+            📖 In-App Quran
+          </button>
+
           <button type="button" class="btn btn-secondary-subtle" id="sync-calendar-btn" title="Export recurring alarms to iOS Reminders / Calendar / Google Calendar (.ics)">
             <svg viewBox="0 0 24 24" class="btn-icon-sm" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -184,7 +224,7 @@
         <p class="footer-brand">
           <strong>Recurr.ai</strong> — Super Easy & Beautiful Daily Nagging System
         </p>
-        <p class="footer-version" id="app-version-tag">v1.0.2 (updated 2026-10-17 23:05)</p>
+        <p class="footer-version" id="app-version-tag">v1.0.3 (updated 2026-10-17 23:36)</p>
       </div>
     </footer>
 
@@ -351,6 +391,19 @@
           </div>
         </div>
 
+        <!-- Photo / Screenshot Proof Upload (Improvement 4) -->
+        <div class="form-group">
+          <label for="verify-photo-input" class="form-label">📷 Photo Proof / Screenshot (Optional Undeniable Proof)</label>
+          <span class="form-hint-format">Snap your Quran page or upload your Poe chat screenshot</span>
+          <div class="photo-upload-wrap">
+            <input type="file" id="verify-photo-input" class="form-file-input" accept="image/*" capture="environment">
+            <div id="photo-preview-box" class="photo-preview-box" style="display: none;">
+              <img id="photo-preview-img" src="" alt="Proof Preview" class="photo-preview-img">
+              <button type="button" class="btn-remove-photo" id="remove-photo-btn" aria-label="Remove image">&times;</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Honesty Pledge Checkbox -->
         <div class="pledge-card">
           <label class="pledge-label">
@@ -378,9 +431,14 @@
             <p class="modal-subtitle">Verified history & reflections</p>
           </div>
         </div>
-        <form method="dialog">
-          <button type="submit" class="modal-close-btn" aria-label="Close dialog">&times;</button>
-        </form>
+        <div class="header-action-group">
+          <button type="button" class="btn btn-secondary-subtle" id="share-reports-btn" title="Share your daily accountability report via WhatsApp, iMessage, etc.">
+            📤 Share Proof
+          </button>
+          <form method="dialog">
+            <button type="submit" class="modal-close-btn" aria-label="Close dialog">&times;</button>
+          </form>
+        </div>
       </div>
 
       <div class="history-list-wrap" id="history-list-container">
@@ -395,17 +453,136 @@
     </div>
   </dialog>
 
-  <!-- Accessible Modal Dialog: App Settings & Notification Guide -->
+  <!-- Accessible Modal Dialog: Built-in 2-Page Quran Reader with Screen Wake Lock -->
+  <dialog class="app-modal reader-modal" id="quran-reader-modal" closedby="any">
+    <div class="modal-dialog-content reader-modal-content">
+      <div class="modal-header">
+        <div class="modal-header-with-badge">
+          <span class="safeguard-icon-badge">📖</span>
+          <div>
+            <h2 class="modal-title" id="quran-reader-title">Daily Quran Reader</h2>
+            <div class="reader-meta-row">
+              <span class="wake-lock-pill" id="wake-lock-status">🔆 Keep-Awake Armed</span>
+              <span class="page-count-badge" id="reader-page-indicator">Page 1 of 2</span>
+            </div>
+          </div>
+        </div>
+        <form method="dialog">
+          <button type="submit" class="modal-close-btn" aria-label="Close dialog">&times;</button>
+        </form>
+      </div>
+
+      <div class="reader-controls-bar">
+        <select id="reader-surah-select" class="form-select reader-select">
+          <option value="kahf">Surah Al-Kahf (18:1–20)</option>
+          <option value="mulk">Surah Al-Mulk (67:1–30)</option>
+          <option value="yasin">Surah Ya-Sin (36:1–32)</option>
+          <option value="baqarah">Surah Al-Baqarah (2:284–286)</option>
+        </select>
+        <div class="font-size-btns">
+          <button type="button" class="btn-reader-tool" id="font-dec-btn" title="Decrease font size">A-</button>
+          <button type="button" class="btn-reader-tool" id="font-inc-btn" title="Increase font size">A+</button>
+        </div>
+      </div>
+
+      <div class="quran-pages-container" id="quran-reader-body">
+        <!-- Rendered Quranic text -->
+      </div>
+
+      <div class="reader-page-navigation">
+        <button type="button" class="btn btn-secondary-subtle" id="reader-prev-btn" disabled>← Previous Page</button>
+        <span class="page-step-text" id="reader-step-text">Page 1 of 2</span>
+        <button type="button" class="btn btn-primary" id="reader-next-btn">Next Page →</button>
+      </div>
+
+      <div class="reader-footer-actions">
+        <button type="button" class="btn btn-warning-glow" id="finish-reading-btn" style="width: 100%;">
+          ✓ Finished Reading 2 Pages → Submit Verification Report
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Accessible Modal Dialog: Smart Snooze with Reason & Limits -->
+  <dialog class="app-modal" id="snooze-modal" closedby="any">
+    <div class="modal-dialog-content">
+      <div class="modal-header">
+        <div class="modal-header-with-badge">
+          <span class="safeguard-icon-badge">💤</span>
+          <div>
+            <h2 class="modal-title">Snooze Habit Alarm</h2>
+            <p class="modal-subtitle" id="snooze-quota-text">Quota: 3 of 3 snoozes remaining today</p>
+          </div>
+        </div>
+        <form method="dialog">
+          <button type="submit" class="modal-close-btn" aria-label="Close dialog">&times;</button>
+        </form>
+      </div>
+
+      <input type="hidden" id="snooze-task-id" value="">
+
+      <div class="form-group">
+        <label class="form-label">Snooze Duration</label>
+        <div class="snooze-duration-grid">
+          <button type="button" class="btn-duration-chip active" data-mins="10">10 Mins</button>
+          <button type="button" class="btn-duration-chip" data-mins="15">15 Mins</button>
+          <button type="button" class="btn-duration-chip" data-mins="30">30 Mins</button>
+          <button type="button" class="btn-duration-chip" data-mins="60">1 Hour</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="snooze-reason-select" class="form-label">Valid Reason (Anti-Procrastination)</label>
+        <select id="snooze-reason-select" class="form-select">
+          <option value="In a meeting / work call">💼 In a meeting / work call</option>
+          <option value="Driving / In transit">🚗 Driving / In transit</option>
+          <option value="In prayer / worship">🕌 In prayer / worship</option>
+          <option value="Eating / Family commitment">🍽️ Eating / Family commitment</option>
+          <option value="Need 15 min focus window">⏳ Need a short 15m focus window</option>
+        </select>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="btn btn-secondary" id="snooze-cancel-btn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="snooze-confirm-btn">Confirm Snooze</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Accessible Modal Dialog: App Settings & Master Audio Center -->
   <dialog class="app-modal" id="settings-modal" closedby="any">
     <div class="modal-dialog-content">
       <div class="modal-header">
-        <h2 class="modal-title">Settings & Mobile Setup</h2>
+        <h2 class="modal-title">Settings & Audio Center</h2>
         <form method="dialog">
           <button type="submit" class="modal-close-btn" aria-label="Close dialog">&times;</button>
         </form>
       </div>
 
       <div class="settings-body">
+        <!-- Master Volume & Sound Center -->
+        <div class="settings-card">
+          <h3 class="settings-subheading">🔊 Sound & Nag Volume Controls</h3>
+          <div class="form-group">
+            <div class="flex-between">
+              <label for="master-volume-slider" class="form-label">Master Volume</label>
+              <span id="volume-val-text" class="text-xs-mono">80%</span>
+            </div>
+            <input type="range" id="master-volume-slider" class="range-slider" min="10" max="100" value="80">
+          </div>
+
+          <div class="sound-test-row">
+            <select id="sound-preview-select" class="form-select text-xs">
+              <option value="urgentRadar">🚨 Urgent Radar Ping</option>
+              <option value="pleasantChime">🔔 Pleasant Melody Chime</option>
+              <option value="zenBell">🧘 Zen Singing Bowl</option>
+              <option value="retroPing">👾 Retro Arcade Blip</option>
+              <option value="celebrate">🎉 Victory Celebration Chord</option>
+            </select>
+            <button type="button" class="btn btn-secondary-subtle" id="test-sound-choice-btn">▶ Play</button>
+          </div>
+        </div>
+
         <div class="settings-card">
           <h3 class="settings-subheading">🔔 Push & System Notifications</h3>
           <p class="settings-desc">Allow notifications so Recurr.ai can alert and nag you even when this tab is in the background.</p>
@@ -414,6 +591,17 @@
             <button type="button" class="btn btn-warning-glow" id="test-alert-btn">Test Audio & Alert</button>
           </div>
           <p class="permission-status-text" id="permission-status-text">Status: Checking...</p>
+        </div>
+
+        <div class="settings-card">
+          <h3 class="settings-subheading">⌨️ Keyboard Shortcuts</h3>
+          <ul class="shortcuts-list">
+            <li><kbd>A</kbd> — Open Add Habit modal</li>
+            <li><kbd>H</kbd> — Open Reports History log</li>
+            <li><kbd>N</kbd> — Trigger instant Nag Me Now test</li>
+            <li><kbd>Q</kbd> — Open In-App Quran Reader</li>
+            <li><kbd>Esc</kbd> — Close active modal</li>
+          </ul>
         </div>
 
         <div class="settings-card">

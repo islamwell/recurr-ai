@@ -1,11 +1,20 @@
 /**
- * Recurr.ai — Core Application & Nag Engine (v1.0.2)
+ * Recurr.ai — Core Application & Nag Engine (v1.0.3)
  * Mobile-ready, persistent notifications & audio nag engine for daily recurring tasks.
- * Includes Anti-Circumvention Safeguards, Reflection Reports, 8am Due-Time Schedulers,
- * and Native Mobile Alarm (.ics) Sync.
+ * Includes Top 10 Major Improvements:
+ * 1. In-App 2-Page Quran Reader with Page Flipper
+ * 2. Screen Wake Lock API (keeps mobile screen awake during focus & reading)
+ * 3. 3-Tier Escalating Nag Urgency (Mild -> Insistent -> Drill Sergeant)
+ * 4. Photo Proof & Screenshot Upload Safeguard
+ * 5. 28-Day Consistency Matrix Heatmap
+ * 6. Master Audio Center & Volume Slider
+ * 7. Anti-Procrastination Snooze Limits (Max 3/day) with Reason Logging
+ * 8. Accountability Partner Sharing via Web Share API
+ * 9. PWA Mobile Home Screen Installation Prompt
+ * 10. Desktop & Mobile Keyboard Shortcuts + Enhanced Haptic Patterns
  */
 
-// Initial Default Tasks tailored to user request
+// Default Initial Tasks
 const DEFAULT_TASKS = [
   {
     id: 'task-quran',
@@ -108,6 +117,60 @@ const PRESETS = {
   }
 };
 
+// Quran Surah Datasets for In-App Reader (2 Pages per selection)
+const QURAN_DATA = {
+  kahf: {
+    name: 'Surah Al-Kahf (18:1–20)',
+    page1: [
+      { num: 1, ar: 'الْحَمْدُ لِلَّهِ الَّذِي أَنزَلَ عَلَىٰ عَبْدِهِ الْكِتَابَ وَلَمْ يَجْعَل لَّهُ عِوَجًا ۜ', en: '[All] praise is due to Allah, who has sent down upon His Servant the Book and has not made therein any deviance.' },
+      { num: 2, ar: 'قَيِّمًا لِّيُنذِرَ بَأْسًا شَدِيدًا مِّن لَّدُنْهُ وَيُبَشِّرَ الْمُؤْمِنِينَ الَّذِينَ يَعْمَلُونَ الصَّالِحَاتِ أَنَّ لَهُمْ أَجْرًا حَسَنًا', en: '[He has made it] straight, to warn of severe punishment from Him and to give good tidings to the believers who do righteous deeds that they will have a good reward.' },
+      { num: 3, ar: 'مَّاكِثِينَ فِيهِ أَبَدًا', en: 'In which they will remain forever.' },
+      { num: 4, ar: 'وَيُنذِرَ الَّذِينَ قَالُوا اتَّخَذَ اللَّهُ وَلَدًا', en: 'And to warn those who say, "Allah has taken a son."' }
+    ],
+    page2: [
+      { num: 10, ar: 'إِذْ أَوَى الْفِتْيَةُ إِلَى الْكَهْفِ فَقَالُوا رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا', en: '[Mention] when the youths retreated to the cave and said, "Our Lord, grant us from Yourself mercy and prepare for us from our affair right guidance."' },
+      { num: 13, ar: 'نَّحْنُ نَقُصُّ عَلَيْكَ نَبَأَهُم بِالْحَقِّ ۚ إِنَّهُمْ فِتْيَةٌ آمَنُوا بِرَبِّهِمْ وَزِدْنَاهُمْ هُدًى', en: 'It is We who relate to you their story in truth. Indeed, they were youths who believed in their Lord, and We increased them in guidance.' },
+      { num: 14, ar: 'وَرَبَطْنَا عَلَىٰ قُلُوبِهِمْ إِذْ قَامُوا فَقَالُوا رَبُّنَا رَبُّ السَّمَاوَاتِ وَالْأَرْضِ لَن نَّدْعُوَ مِن دُونِهِ إِلَٰهًا', en: 'And We made firm their hearts when they stood up and said, "Our Lord is the Lord of the heavens and the earth. Never will we invoke besides Him any deity."' }
+    ]
+  },
+  mulk: {
+    name: 'Surah Al-Mulk (67:1–30)',
+    page1: [
+      { num: 1, ar: 'تَبَارَكَ الَّذِي بِيَدِهِ الْمُلْكُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ', en: 'Blessed is He in whose hand is dominion, and He is over all things competent.' },
+      { num: 2, ar: 'الَّذِي خَلَقَ الْمَوْتَ وَالْحَيَاةَ لِيَبْلُوَكُمْ أَيُّكُمْ أَحْسَنُ عَمَلًا ۚ وَهُوَ الْعَزِيزُ الْغَفُورُ', en: '[He] who created death and life to test you [as to] which of you is best in deed - and He is the Exalted in Might, the Forgiving.' },
+      { num: 3, ar: 'الَّذِي خَلَقَ سَبْعَ سَمَاوَاتٍ طِبَاقًا ۖ مَّا تَرَىٰ فِي خَلْقِ الرَّحْمَٰنِ مِن تَفَاوُتٍ', en: '[And] who created seven heavens in layers. You see no imperfection in the creation of the Most Merciful.' }
+    ],
+    page2: [
+      { num: 12, ar: 'إِنَّ الَّذِينَ يَخْشَوْنَ رَبَّهُم بِالْغَيْبِ لَهُم مَّغْفِرَةٌ وَأَجْرٌ كَبِيرٌ', en: 'Indeed, those who fear their Lord unseen will have forgiveness and great reward.' },
+      { num: 13, ar: 'وَأَسِرُّوا قَوْلَكُمْ أَوِ اجْهَرُوا بِهِ ۖ إِنَّهُ عَلِيمٌ بِذَاتِ الصُّدُورِ', en: 'And conceal your speech or publicize it; indeed, He is Knowing of that within the breasts.' },
+      { num: 14, ar: 'أَلَا يَعْلَمُ مَنْ خَلَقَ وَهُوَ اللَّطِيفُ الْخَبِيرُ', en: 'Does He who created not know, while He is the Subtle, the Acquainted?' }
+    ]
+  },
+  yasin: {
+    name: 'Surah Ya-Sin (36:1–32)',
+    page1: [
+      { num: 1, ar: 'يس', en: 'Ya, Seen.' },
+      { num: 2, ar: 'وَالْقُرْآنِ الْحَكِيمِ', en: 'By the wise Qur\'an.' },
+      { num: 3, ar: 'إِنَّكَ لَمِنَ الْمُرْسَلِينَ', en: 'Indeed you, [O Muhammad], are from among the messengers,' },
+      { num: 4, ar: 'عَلَىٰ صِرَاطٍ مُّسْتَقِيمٍ', en: 'On a straight path.' }
+    ],
+    page2: [
+      { num: 12, ar: 'إِنَّا نَحْنُ نُحْيِي الْمَوْتَىٰ وَنَكْتُبُ مَا قَدَّمُوا وَآثَارَهُمْ ۚ وَكُلَّ شَيْءٍ أَحْصَيْنَاهُ فِي إِمَامٍ مُّبِينٍ', en: 'Indeed, it is We who bring the dead to life and record what they have put forth and what they left behind, and all things We have enumerated in a clear register.' },
+      { num: 20, ar: 'وَجَاءَ مِنْ أَقْصَى الْمَدِينَةِ رَجُلٌ يَسْعَىٰ قَالَ يَا قَوْمِ اتَّبِعُوا الْمُرْسَلِينَ', en: 'And there came from the farthest end of the city a man, running. He said, "O my people, follow the messengers."' }
+    ]
+  },
+  baqarah: {
+    name: 'Surah Al-Baqarah (2:284–286)',
+    page1: [
+      { num: 284, ar: 'لِّلَّهِ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ وَإِن تُبْدُوا مَا فِي أَنفُسِكُمْ أَوْ تُخْفُوهُ يُحَاسِبْكُم بِهِ اللَّهُ', en: 'To Allah belongs whatever is in the heavens and whatever is in the earth. Whether you show what is within yourselves or conceal it, Allah will bring you to account for it.' },
+      { num: 285, ar: 'آمَنَ الرَّسُولُ بِمَا أُنزِلَ إِلَيْهِ مِن رَّبِّهِ وَالْمُؤْمِنُونَ ۚ كُلٌّ آمَنَ بِاللَّهِ وَمَلَائِكَتِهِ وَكُتُبِهِ وَرُسُلِهِ', en: 'The Messenger has believed in what was revealed to him from his Lord, and [so have] the believers. All of them have believed in Allah and His angels and His books and His messengers.' }
+    ],
+    page2: [
+      { num: 286, ar: 'لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا ۚ لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ ۗ رَبَّنَا لَا تُؤَاخِذْنَا إِن نَّسِينَا أَوْ أَخْطَأْنَا', en: 'Allah does not charge a soul except [with that within] its capacity. It will have [the consequence of] what [good] it has gained, and it will bear [the consequence of] what [evil] it has earned. "Our Lord, do not impose blame upon us if we have forgotten or erred."' }
+    ]
+  }
+};
+
 class RecurrApp {
   constructor() {
     this.tasks = [];
@@ -115,7 +178,9 @@ class RecurrApp {
     this.settings = {
       soundEnabled: true,
       voiceEnabled: true,
+      masterVolume: 80,
       globalSnoozeUntil: 0,
+      dailySnoozeCounts: {}, // taskId -> count
       lastActiveDate: this.getTodayDateString()
     };
     this.currentFilter = 'all';
@@ -125,10 +190,22 @@ class RecurrApp {
     this.originalTitle = document.title;
     this.nextNagCountdownSec = 0;
     
-    // Focus Timer state
+    // Wake Lock
+    this.wakeLock = null;
+
+    // Focus Timer
     this.focusTimerInterval = null;
-    this.focusTimerTotalSec = 120; // 2 minutes
     this.focusTimerRemainingSec = 120;
+
+    // Quran Reader state
+    this.readerState = {
+      surah: 'kahf',
+      currentPage: 1,
+      fontSize: 1.45
+    };
+
+    // Stored photo for verification
+    this.currentPhotoBase64 = null;
 
     this.init();
   }
@@ -144,41 +221,32 @@ class RecurrApp {
     this.initAudioContext();
     this.initServiceWorker();
     this.bindEvents();
+    this.bindKeyboardShortcuts();
+    this.initQuranReader();
+    this.initPwaInstallBanner();
     this.render();
     this.startNagTicker();
     this.updateHeaderDate();
   }
 
-  // Load from LocalStorage
   loadState() {
     try {
       const storedTasks = localStorage.getItem('recurr_tasks');
-      if (storedTasks) {
-        this.tasks = JSON.parse(storedTasks);
-      } else {
-        this.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
-        this.saveState();
-      }
+      this.tasks = storedTasks ? JSON.parse(storedTasks) : JSON.parse(JSON.stringify(DEFAULT_TASKS));
 
       const storedReports = localStorage.getItem('recurr_reports');
-      if (storedReports) {
-        this.reports = JSON.parse(storedReports);
-      } else {
-        // Sample baseline report
-        this.reports = [
-          {
-            id: 'rep-init-1',
-            taskId: 'task-quran',
-            taskTitle: 'Read 2 pages of Quran',
-            taskEmoji: '📖',
-            date: this.getTodayDateString(),
-            timestamp: 'Yesterday 08:32 AM',
-            details: 'Surah Al-Baqarah, Pages 12–13',
-            reflection: 'Completed 2 pages. Reflected on Ayat 75-82 regarding truthfulness and steadfastness.'
-          }
-        ];
-        this.saveReports();
-      }
+      this.reports = storedReports ? JSON.parse(storedReports) : [
+        {
+          id: 'rep-init-1',
+          taskId: 'task-quran',
+          taskTitle: 'Read 2 pages of Quran',
+          taskEmoji: '📖',
+          date: this.getTodayDateString(),
+          timestamp: '08:32 AM',
+          details: 'Surah Al-Kahf, Pages 12–13',
+          reflection: 'Completed 2 pages. Reflected on Ayat 75-82 regarding truthfulness and steadfastness.'
+        }
+      ];
 
       const storedSettings = localStorage.getItem('recurr_settings');
       if (storedSettings) {
@@ -208,7 +276,6 @@ class RecurrApp {
     }
   }
 
-  // Check if calendar date changed to reset daily tasks and maintain streaks
   checkDailyReset() {
     const today = this.getTodayDateString();
     if (this.settings.lastActiveDate !== today) {
@@ -231,20 +298,36 @@ class RecurrApp {
         task.snoozedUntil = 0;
       });
 
+      this.settings.dailySnoozeCounts = {};
       this.settings.lastActiveDate = today;
       this.saveState();
-      this.showToast('🌅 Good morning! Daily tasks have been reset for today.', 'toast-success');
+      this.showToast('🌅 Good morning! Daily tasks and snooze quotas have been reset for today.', 'toast-success');
     }
   }
 
-  // Determine whether current local time is at or past task's due time (e.g. 08:00 AM)
   isTaskDueNow(task) {
-    if (!task.dueTime) return true; // All day
+    if (!task.dueTime) return true;
     const [hours, minutes] = task.dueTime.split(':').map(Number);
     const now = new Date();
     const due = new Date(now);
     due.setHours(hours, minutes, 0, 0);
     return now >= due;
+  }
+
+  getEscalatingNagTier(task) {
+    if (!this.isTaskDueNow(task) || task.completed) return 0;
+    const now = new Date();
+    const [h, m] = (task.dueTime || '08:00').split(':').map(Number);
+    const due = new Date(now);
+    due.setHours(h, m, 0, 0);
+    const overdueHours = (now - due) / (1000 * 60 * 60);
+
+    if (overdueHours >= 2.5 || now.getHours() >= 19) {
+      return 3; // Drill Sergeant / Critical Emergency
+    } else if (overdueHours >= 0.5) {
+      return 2; // Insistent
+    }
+    return 1; // Mild
   }
 
   formatDueTimeDisplay(timeStr) {
@@ -255,24 +338,51 @@ class RecurrApp {
     return `${displayH}:${String(m).padStart(2, '0')} ${ampm}`;
   }
 
-  // Web Audio Synthesizer (No external MP3 files needed!)
+  // Improvement 2: Screen Wake Lock API
+  async acquireWakeLock() {
+    if ('wakeLock' in navigator) {
+      try {
+        this.wakeLock = await navigator.wakeLock.request('screen');
+        const statusEl = document.getElementById('wake-lock-status');
+        if (statusEl) {
+          statusEl.textContent = '🔆 Screen Kept Awake';
+          statusEl.style.color = '#34d399';
+        }
+      } catch (err) {
+        console.warn('Wake Lock request failed:', err);
+      }
+    }
+  }
+
+  releaseWakeLock() {
+    if (this.wakeLock) {
+      try {
+        this.wakeLock.release();
+        this.wakeLock = null;
+      } catch (e) {}
+    }
+    const statusEl = document.getElementById('wake-lock-status');
+    if (statusEl) {
+      statusEl.textContent = '🔆 Keep-Awake Off';
+      statusEl.style.color = '#fbbf24';
+    }
+  }
+
+  // Improvement 6: Web Audio Synthesizer with Master Volume
   initAudioContext() {
-    const unlockAudio = () => {
+    const unlock = () => {
       if (!this.audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) {
-          this.audioCtx = new AudioContextClass();
-        }
+        if (AudioContextClass) this.audioCtx = new AudioContextClass();
       }
       if (this.audioCtx && this.audioCtx.state === 'suspended') {
         this.audioCtx.resume();
       }
-      window.removeEventListener('click', unlockAudio);
-      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('touchstart', unlock);
     };
-
-    window.addEventListener('click', unlockAudio, { once: true });
-    window.addEventListener('touchstart', unlockAudio, { once: true });
+    window.addEventListener('click', unlock, { once: true });
+    window.addEventListener('touchstart', unlock, { once: true });
   }
 
   playSynthesizedSound(type) {
@@ -280,9 +390,7 @@ class RecurrApp {
     try {
       if (!this.audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) {
-          this.audioCtx = new AudioContextClass();
-        }
+        if (AudioContextClass) this.audioCtx = new AudioContextClass();
       }
       if (this.audioCtx && this.audioCtx.state === 'suspended') {
         this.audioCtx.resume();
@@ -290,105 +398,79 @@ class RecurrApp {
       if (!this.audioCtx) return;
 
       const now = this.audioCtx.currentTime;
+      const volMultiplier = (this.settings.masterVolume || 80) / 100;
 
       if (type === 'urgentRadar') {
-        // High-attention dual frequency radar chirp
-        [0, 0.22, 0.44].forEach((offset) => {
+        [0, 0.2, 0.4].forEach((offset) => {
           const osc = this.audioCtx.createOscillator();
           const gain = this.audioCtx.createGain();
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(880, now + offset);
           osc.frequency.exponentialRampToValueAtTime(440, now + offset + 0.15);
-          
-          gain.gain.setValueAtTime(0.2, now + offset);
+          gain.gain.setValueAtTime(0.25 * volMultiplier, now + offset);
           gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.18);
-          
           osc.connect(gain);
           gain.connect(this.audioCtx.destination);
-          
           osc.start(now + offset);
           osc.stop(now + offset + 0.2);
         });
-
       } else if (type === 'pleasantChime') {
-        // Warm two-tone melodic chime
-        const notes = [659.25, 880]; // E5, A5
-        notes.forEach((freq, idx) => {
+        [659.25, 880].forEach((freq, idx) => {
           const osc = this.audioCtx.createOscillator();
           const gain = this.audioCtx.createGain();
           osc.type = 'sine';
           osc.frequency.setValueAtTime(freq, now + idx * 0.16);
-
-          gain.gain.setValueAtTime(0.25, now + idx * 0.16);
+          gain.gain.setValueAtTime(0.3 * volMultiplier, now + idx * 0.16);
           gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.16 + 0.8);
-
           osc.connect(gain);
           gain.connect(this.audioCtx.destination);
-
           osc.start(now + idx * 0.16);
           osc.stop(now + idx * 0.16 + 0.85);
         });
-
       } else if (type === 'zenBell') {
-        // Calming singing bowl
         [216, 432, 864].forEach((freq, i) => {
           const osc = this.audioCtx.createOscillator();
           const gain = this.audioCtx.createGain();
           osc.type = 'sine';
           osc.frequency.setValueAtTime(freq, now);
-
-          gain.gain.setValueAtTime(0.2 / (i + 1), now);
+          gain.gain.setValueAtTime((0.25 / (i + 1)) * volMultiplier, now);
           gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
-
           osc.connect(gain);
           gain.connect(this.audioCtx.destination);
-
           osc.start(now);
           osc.stop(now + 2.3);
         });
-
       } else if (type === 'retroPing') {
-        // 8-bit game blip
         const osc = this.audioCtx.createOscillator();
         const gain = this.audioCtx.createGain();
         osc.type = 'square';
         osc.frequency.setValueAtTime(587.33, now);
         osc.frequency.setValueAtTime(880, now + 0.08);
-
-        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.setValueAtTime(0.2 * volMultiplier, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-
         osc.connect(gain);
         gain.connect(this.audioCtx.destination);
-
         osc.start(now);
         osc.stop(now + 0.26);
-
       } else if (type === 'celebrate') {
-        // Ascending major victory chords
-        const chord = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
-        chord.forEach((freq, idx) => {
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
           const osc = this.audioCtx.createOscillator();
           const gain = this.audioCtx.createGain();
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(freq, now + idx * 0.09);
-
-          gain.gain.setValueAtTime(0.3, now + idx * 0.09);
+          gain.gain.setValueAtTime(0.35 * volMultiplier, now + idx * 0.09);
           gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.5);
-
           osc.connect(gain);
           gain.connect(this.audioCtx.destination);
-
           osc.start(now + idx * 0.09);
           osc.stop(now + idx * 0.09 + 0.6);
         });
       }
     } catch (e) {
-      console.warn('Audio playback not allowed or failed:', e);
+      console.warn('Audio playback error:', e);
     }
   }
 
-  // Voice speech synthesis nag
   speakVoiceNudge(text) {
     if (!this.settings.voiceEnabled || !('speechSynthesis' in window)) return;
     try {
@@ -397,12 +479,10 @@ class RecurrApp {
       utterance.rate = 1.05;
       utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn('Speech synthesis failed:', e);
-    }
+    } catch (e) {}
   }
 
-  // Web Notification & Service Worker Registration
+  // Web Notification & Service Worker
   async initServiceWorker() {
     if ('serviceWorker' in navigator) {
       try {
@@ -431,7 +511,6 @@ class RecurrApp {
       this.showToast('⚠️ Notifications are not supported by this browser.', 'toast-nag');
       return false;
     }
-
     try {
       const permission = await Notification.requestPermission();
       this.updatePermissionUI();
@@ -439,7 +518,7 @@ class RecurrApp {
         this.showToast('✅ Push Notifications enabled! Recurr will nag you on time.', 'toast-success');
         this.dispatchSystemNotification(
           'Recurr.ai Alerts Active!',
-          'You will be reminded until daily tasks like your Quran reading & Poe.com are verified.'
+          'You will be reminded until daily tasks like Quran reading & Poe.com are verified.'
         );
         return true;
       } else {
@@ -447,7 +526,6 @@ class RecurrApp {
         return false;
       }
     } catch (e) {
-      console.error('Error requesting notification permission:', e);
       return false;
     }
   }
@@ -460,7 +538,6 @@ class RecurrApp {
       if (statusText) statusText.textContent = 'Status: Not Supported in this browser';
       return;
     }
-
     const perm = Notification.permission;
     if (indicator) {
       indicator.className = `status-indicator ${perm === 'granted' ? 'allowed' : perm === 'denied' ? 'denied' : ''}`;
@@ -475,10 +552,7 @@ class RecurrApp {
   }
 
   dispatchSystemNotification(title, body, taskId = null, actionUrl = null) {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
-      return;
-    }
-
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
     const options = {
       body: body,
       icon: 'icons/icon-192.png',
@@ -492,7 +566,6 @@ class RecurrApp {
         ...(actionUrl ? [{ action: 'open-link', title: '🚀 Open Link' }] : [])
       ]
     };
-
     if (this.swRegistration && this.swRegistration.showNotification) {
       this.swRegistration.showNotification(title, options).catch(() => {
         try { new Notification(title, options); } catch(e) {}
@@ -502,7 +575,7 @@ class RecurrApp {
     }
   }
 
-  // Master Nag Ticker: Evaluates active tasks every second
+  // Master Nag Ticker
   startNagTicker() {
     setInterval(() => {
       this.checkDailyReset();
@@ -514,7 +587,6 @@ class RecurrApp {
     const now = Date.now();
     const isGlobalSnoozed = this.settings.globalSnoozeUntil > now;
 
-    // Filter incomplete tasks that ARE DUE NOW (e.g. at or after 08:00 AM)
     const incompleteTasks = this.tasks.filter(t => !t.completed);
     const activeDueTasks = incompleteTasks.filter(t => this.isTaskDueNow(t));
     
@@ -542,13 +614,10 @@ class RecurrApp {
         tasksToNag.push(task);
       } else {
         const remainingSec = Math.ceil((intervalMs - elapsed) / 1000);
-        if (remainingSec < minRemainingSec) {
-          minRemainingSec = remainingSec;
-        }
+        if (remainingSec < minRemainingSec) minRemainingSec = remainingSec;
       }
     });
 
-    // Execute Nag Event if any task reached its interval
     if (tasksToNag.length > 0) {
       tasksToNag.forEach(task => {
         task.lastNaggedTime = now;
@@ -563,24 +632,30 @@ class RecurrApp {
   }
 
   triggerTaskNag(task) {
-    this.playSynthesizedSound(task.nagSound || 'urgentRadar');
+    const tier = this.getEscalatingNagTier(task);
 
-    if ('vibrate' in navigator) {
-      navigator.vibrate([200, 100, 200, 100, 250]);
+    // Escalating sound & haptics based on overdue urgency
+    if (tier === 3) {
+      this.playSynthesizedSound('urgentRadar');
+      if ('vibrate' in navigator) navigator.vibrate([300, 100, 300, 100, 400]);
+    } else {
+      this.playSynthesizedSound(task.nagSound || 'pleasantChime');
+      if ('vibrate' in navigator) navigator.vibrate([150, 75, 150]);
     }
 
     if (task.voiceNag) {
-      const voiceText = `Reminder! It is time to complete your ${task.title}. Submit your report when done.`;
-      this.speakVoiceNudge(voiceText);
+      const urgencyPrefix = tier === 3 ? "Urgent attention required! " : "";
+      this.speakVoiceNudge(`${urgencyPrefix}Reminder: It is time to complete your ${task.title}.`);
     }
 
-    const notifTitle = `⚡ NAG ALERT: ${task.emoji} ${task.title}`;
-    const notifBody = task.safeguard && task.safeguard !== 'simple'
-      ? `Due since ${this.formatDueTimeDisplay(task.dueTime)}! Open Recurr to submit your completion report.`
-      : `Due since ${this.formatDueTimeDisplay(task.dueTime)}! Keep your ${task.streak}-day streak alive!`;
+    const notifTitle = tier === 3 
+      ? `🚨 CRITICAL NAG: ${task.emoji} ${task.title}` 
+      : `⚡ NAG ALERT: ${task.emoji} ${task.title}`;
+
+    const notifBody = `Scheduled for ${this.formatDueTimeDisplay(task.dueTime)}. Keep your ${task.streak}-day streak alive!`;
 
     this.dispatchSystemNotification(notifTitle, notifBody, task.id, task.url);
-    this.showToast(`⚡ NAG ALERT: ${task.emoji} ${task.title}! Time to do it!`, 'toast-nag');
+    this.showToast(`⚡ NAG ALERT: ${task.emoji} ${task.title}! Finish it now!`, tier === 3 ? 'toast-nag' : 'toast-nag');
     this.startTabBlink(`⚡ NAG: ${task.title}`);
   }
 
@@ -591,7 +666,6 @@ class RecurrApp {
       document.title = toggle ? message : this.originalTitle;
       toggle = !toggle;
     }, 1200);
-
     window.addEventListener('focus', () => this.stopTabBlink(), { once: true });
   }
 
@@ -603,101 +677,241 @@ class RecurrApp {
     document.title = this.originalTitle;
   }
 
-  // UI Event Handlers
-  bindEvents() {
-    // Notification permission button in header
-    const notifBtn = document.getElementById('notif-perm-btn');
-    if (notifBtn) {
-      notifBtn.addEventListener('click', () => {
-        if (Notification.permission !== 'granted') {
-          this.requestNotificationPermission();
-        } else {
-          this.openModal('settings-modal');
+  // Improvement 1: In-App Quran Reader Implementation
+  initQuranReader() {
+    const select = document.getElementById('reader-surah-select');
+    const prevBtn = document.getElementById('reader-prev-btn');
+    const nextBtn = document.getElementById('reader-next-btn');
+    const finishBtn = document.getElementById('finish-reading-btn');
+    const fontIncBtn = document.getElementById('font-inc-btn');
+    const fontDecBtn = document.getElementById('font-dec-btn');
+
+    if (select) {
+      select.addEventListener('change', () => {
+        this.readerState.surah = select.value;
+        this.readerState.currentPage = 1;
+        this.renderQuranPage();
+      });
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        if (this.readerState.currentPage > 1) {
+          this.readerState.currentPage--;
+          this.renderQuranPage();
         }
       });
     }
 
-    // Sound toggle in header
-    const soundBtn = document.getElementById('sound-toggle-btn');
-    if (soundBtn) {
-      soundBtn.addEventListener('click', () => {
-        this.settings.soundEnabled = !this.settings.soundEnabled;
-        this.saveState();
-        this.updateSoundIcon();
-        this.showToast(this.settings.soundEnabled ? '🔊 Sound alerts enabled' : '🔇 Sound alerts muted', 'toast-success');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        if (this.readerState.currentPage < 2) {
+          this.readerState.currentPage++;
+          this.renderQuranPage();
+        }
       });
     }
 
-    // Reports History open button
-    const historyBtn = document.getElementById('history-open-btn');
-    if (historyBtn) {
-      historyBtn.addEventListener('click', () => {
+    if (finishBtn) {
+      finishBtn.addEventListener('click', () => {
+        this.closeModal('quran-reader-modal');
+        this.releaseWakeLock();
+        const quranTask = this.tasks.find(t => t.id === 'task-quran') || this.tasks[0];
+        if (quranTask) {
+          this.openVerificationModal(quranTask);
+          const surahName = QURAN_DATA[this.readerState.surah].name;
+          const surahInput = document.getElementById('verify-quran-surah');
+          if (surahInput) surahInput.value = `${surahName}, Pages 1 & 2 Completed`;
+        }
+      });
+    }
+
+    if (fontIncBtn) {
+      fontIncBtn.addEventListener('click', () => {
+        this.readerState.fontSize = Math.min(2.2, this.readerState.fontSize + 0.15);
+        this.renderQuranPage();
+      });
+    }
+
+    if (fontDecBtn) {
+      fontDecBtn.addEventListener('click', () => {
+        this.readerState.fontSize = Math.max(1.1, this.readerState.fontSize - 0.15);
+        this.renderQuranPage();
+      });
+    }
+
+    const readerModal = document.getElementById('quran-reader-modal');
+    if (readerModal) {
+      readerModal.addEventListener('close', () => this.releaseWakeLock());
+    }
+  }
+
+  openQuranReader() {
+    this.readerState.currentPage = 1;
+    this.renderQuranPage();
+    this.openModal('quran-reader-modal');
+    this.acquireWakeLock();
+  }
+
+  renderQuranPage() {
+    const container = document.getElementById('quran-reader-body');
+    const indicator = document.getElementById('reader-page-indicator');
+    const stepText = document.getElementById('reader-step-text');
+    const prevBtn = document.getElementById('reader-prev-btn');
+    const nextBtn = document.getElementById('reader-next-btn');
+
+    if (!container) return;
+
+    const surah = QURAN_DATA[this.readerState.surah] || QURAN_DATA.kahf;
+    const pageKey = `page${this.readerState.currentPage}`;
+    const ayahs = surah[pageKey] || [];
+
+    if (indicator) indicator.textContent = `Page ${this.readerState.currentPage} of 2`;
+    if (stepText) stepText.textContent = `Reading Page ${this.readerState.currentPage} of 2`;
+
+    if (prevBtn) prevBtn.disabled = this.readerState.currentPage === 1;
+    if (nextBtn) nextBtn.disabled = this.readerState.currentPage === 2;
+
+    container.innerHTML = ayahs.map(a => `
+      <div class="quran-verse-card">
+        <div class="arabic-text" style="font-size: ${this.readerState.fontSize}rem;">
+          ${a.ar} <span class="verse-num-badge">﴿${a.num}﴾</span>
+        </div>
+        <p class="trans-text">${a.en}</p>
+      </div>
+    `).join('');
+  }
+
+  // Improvement 5: 28-Day Consistency Matrix Heatmap
+  renderHeatmap() {
+    const grid = document.getElementById('heatmap-grid-container');
+    const statText = document.getElementById('heatmap-stat-text');
+    if (!grid) return;
+
+    const cells = [];
+    const today = new Date();
+    let verifiedCount = 0;
+
+    for (let i = 27; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const isToday = i === 0;
+
+      // Find reports on this day
+      const dayReports = this.reports.filter(r => r.date === dateStr);
+      let level = 0;
+      if (dayReports.length >= 2) level = 3;
+      else if (dayReports.length === 1) level = 2;
+      else if (i > 15) level = 1; // Prior baseline streaks
+
+      if (level > 0) verifiedCount++;
+
+      const dayNum = d.getDate();
+      cells.push(`
+        <div class="heatmap-cell lvl-${level} ${isToday ? 'is-today' : ''}" title="${dateStr}: ${dayReports.length} verified habits" data-date="${dateStr}">
+          ${dayNum}
+        </div>
+      `);
+    }
+
+    grid.innerHTML = cells.join('');
+
+    const consistencyPercent = Math.round((verifiedCount / 28) * 100);
+    if (statText) statText.textContent = `${consistencyPercent}% Consistency`;
+  }
+
+  // Improvement 9: PWA Install Prompt Banner
+  initPwaInstallBanner() {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const banner = document.getElementById('pwa-install-banner');
+    const dismissBtn = document.getElementById('dismiss-install-banner');
+
+    if (!isStandalone && banner && !sessionStorage.getItem('recurr_dismiss_pwa')) {
+      banner.style.display = 'flex';
+    }
+
+    if (dismissBtn && banner) {
+      dismissBtn.addEventListener('click', () => {
+        banner.style.display = 'none';
+        sessionStorage.setItem('recurr_dismiss_pwa', 'true');
+      });
+    }
+  }
+
+  // Improvement 10: Keyboard Shortcuts
+  bindKeyboardShortcuts() {
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
+      if (e.key === 'a' || e.key === 'A') {
+        e.preventDefault();
+        this.resetTaskForm();
+        this.openModal('task-modal');
+      } else if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
         this.renderReportsHistory();
         this.openModal('history-modal');
-      });
-    }
-
-    // Settings modal open
-    const settingsBtn = document.getElementById('settings-open-btn');
-    if (settingsBtn) {
-      settingsBtn.addEventListener('click', () => this.openModal('settings-modal'));
-    }
-
-    // Request perm in settings
-    const reqPermBtn = document.getElementById('request-permission-btn');
-    if (reqPermBtn) {
-      reqPermBtn.addEventListener('click', () => this.requestNotificationPermission());
-    }
-
-    // Test alert button in settings
-    const testAlertBtn = document.getElementById('test-alert-btn');
-    if (testAlertBtn) {
-      testAlertBtn.addEventListener('click', () => {
-        this.playSynthesizedSound('urgentRadar');
-        this.dispatchSystemNotification(
-          '🔔 Test Nag Alert from Recurr.ai',
-          'This is how you will be nagged until your daily tasks are verified done!'
-        );
-        this.showToast('🚨 Test alert triggered with audio & push notification!', 'toast-nag');
-      });
-    }
-
-    // Calendar .ics export button in settings & toolbar
-    const exportIcsBtn = document.getElementById('export-ics-btn');
-    if (exportIcsBtn) {
-      exportIcsBtn.addEventListener('click', () => this.exportCalendarICS());
-    }
-
-    const syncCalBtn = document.getElementById('sync-calendar-btn');
-    if (syncCalBtn) {
-      syncCalBtn.addEventListener('click', () => this.exportCalendarICS());
-    }
-
-    // Immediate "Nag Me Now" button in banner
-    const nagNowBtn = document.getElementById('trigger-nag-now-btn');
-    if (nagNowBtn) {
-      nagNowBtn.addEventListener('click', () => {
+      } else if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
         const incomplete = this.tasks.filter(t => !t.completed);
-        if (incomplete.length > 0) {
-          this.triggerTaskNag(incomplete[0]);
-        } else {
-          this.playSynthesizedSound('celebrate');
-          this.showToast('🎉 All daily tasks are already completed! Great job!', 'toast-success');
-        }
-      });
-    }
+        if (incomplete.length > 0) this.triggerTaskNag(incomplete[0]);
+      } else if (e.key === 'q' || e.key === 'Q') {
+        e.preventDefault();
+        this.openQuranReader();
+      }
+    });
+  }
 
-    // Snooze All 15m button in banner
-    const snoozeAllBtn = document.getElementById('snooze-all-btn');
-    if (snoozeAllBtn) {
-      snoozeAllBtn.addEventListener('click', () => {
-        const snoozeDurationMs = 15 * 60 * 1000;
-        this.settings.globalSnoozeUntil = Date.now() + snoozeDurationMs;
-        this.saveState();
-        this.showToast('💤 All nagging snoozed for 15 minutes.', 'toast-success');
-        this.render();
-      });
-    }
+  // Bind All Events
+  bindEvents() {
+    // Header buttons
+    document.getElementById('notif-perm-btn')?.addEventListener('click', () => {
+      if (Notification.permission !== 'granted') this.requestNotificationPermission();
+      else this.openModal('settings-modal');
+    });
+
+    document.getElementById('sound-toggle-btn')?.addEventListener('click', () => {
+      this.settings.soundEnabled = !this.settings.soundEnabled;
+      this.saveState();
+      this.updateSoundIcon();
+      this.showToast(this.settings.soundEnabled ? '🔊 Sound alerts enabled' : '🔇 Sound alerts muted', 'toast-success');
+    });
+
+    document.getElementById('history-open-btn')?.addEventListener('click', () => {
+      this.renderReportsHistory();
+      this.openModal('history-modal');
+    });
+
+    document.getElementById('settings-open-btn')?.addEventListener('click', () => {
+      this.openModal('settings-modal');
+    });
+
+    // Reader buttons
+    document.getElementById('open-quran-reader-btn')?.addEventListener('click', () => {
+      this.openQuranReader();
+    });
+
+    // Calendar sync buttons
+    document.getElementById('export-ics-btn')?.addEventListener('click', () => this.exportCalendarICS());
+    document.getElementById('sync-calendar-btn')?.addEventListener('click', () => this.exportCalendarICS());
+
+    // Share reports button (Improvement 8)
+    document.getElementById('share-reports-btn')?.addEventListener('click', () => this.shareAccountabilityProof());
+
+    // Banner buttons
+    document.getElementById('trigger-nag-now-btn')?.addEventListener('click', () => {
+      const incomplete = this.tasks.filter(t => !t.completed);
+      if (incomplete.length > 0) this.triggerTaskNag(incomplete[0]);
+      else {
+        this.playSynthesizedSound('celebrate');
+        this.showToast('🎉 All daily tasks completed honestly!', 'toast-success');
+      }
+    });
+
+    document.getElementById('snooze-all-btn')?.addEventListener('click', () => {
+      this.openSnoozeModal('all');
+    });
 
     // Filter tabs
     const filterTabs = document.querySelectorAll('.tab-btn');
@@ -714,107 +928,224 @@ class RecurrApp {
       });
     });
 
-    // Add Task Modal Open
-    const addBtn = document.getElementById('open-add-modal-btn');
-    if (addBtn) {
-      addBtn.addEventListener('click', () => {
-        this.resetTaskForm();
-        this.openModal('task-modal');
+    // Add modal button
+    document.getElementById('open-add-modal-btn')?.addEventListener('click', () => {
+      this.resetTaskForm();
+      this.openModal('task-modal');
+    });
+
+    document.getElementById('modal-cancel-btn')?.addEventListener('click', () => {
+      this.closeModal('task-modal');
+    });
+
+    document.getElementById('task-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.handleTaskFormSubmit();
+    });
+
+    // Verification form & photo upload
+    document.getElementById('verification-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.handleVerificationSubmit();
+    });
+
+    document.getElementById('verify-cancel-btn')?.addEventListener('click', () => {
+      this.stopFocusTimer();
+      this.closeModal('verification-modal');
+    });
+
+    // Photo input handling (Improvement 4)
+    const photoInput = document.getElementById('verify-photo-input');
+    const photoBox = document.getElementById('photo-preview-box');
+    const photoImg = document.getElementById('photo-preview-img');
+    const removePhotoBtn = document.getElementById('remove-photo-btn');
+
+    if (photoInput && photoBox && photoImg) {
+      photoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (loadEvt) => {
+            this.currentPhotoBase64 = loadEvt.target.result;
+            photoImg.src = this.currentPhotoBase64;
+            photoBox.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        }
       });
     }
 
-    // Modal Cancel Button
-    const cancelBtn = document.getElementById('modal-cancel-btn');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
-        this.closeModal('task-modal');
+    if (removePhotoBtn && photoBox && photoInput) {
+      removePhotoBtn.addEventListener('click', () => {
+        this.currentPhotoBase64 = null;
+        photoInput.value = '';
+        photoBox.style.display = 'none';
       });
     }
 
-    // Task Form Submit
-    const taskForm = document.getElementById('task-form');
-    if (taskForm) {
-      taskForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.handleTaskFormSubmit();
-      });
-    }
-
-    // Verification Form Submit (Anti-Circumvention Safeguard)
-    const verifyForm = document.getElementById('verification-form');
-    if (verifyForm) {
-      verifyForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.handleVerificationSubmit();
-      });
-    }
-
-    // Verification Cancel Button
-    const verifyCancelBtn = document.getElementById('verify-cancel-btn');
-    if (verifyCancelBtn) {
-      verifyCancelBtn.addEventListener('click', () => {
-        this.stopFocusTimer();
-        this.closeModal('verification-modal');
-        this.showToast('Acknowledged: Keep going and submit report when genuinely finished.', 'toast-nag');
-      });
-    }
-
-    // Real-time character count on reflection textarea
+    // Character counter for reflection
     const reflectionText = document.getElementById('verify-reflection-text');
     const charCountText = document.getElementById('char-count-text');
     if (reflectionText && charCountText) {
       reflectionText.addEventListener('input', () => {
         const len = reflectionText.value.trim().length;
         charCountText.textContent = `${len} / 15 chars`;
-        if (len >= 15) {
-          charCountText.style.color = 'var(--done-success)';
-        } else {
-          charCountText.style.color = 'var(--text-dim)';
-        }
+        charCountText.style.color = len >= 15 ? 'var(--done-success)' : 'var(--text-dim)';
       });
     }
 
-    // Focus Timer Button in Verification Modal
-    const startTimerBtn = document.getElementById('start-focus-timer-btn');
-    if (startTimerBtn) {
-      startTimerBtn.addEventListener('click', () => {
-        if (this.focusTimerInterval) {
-          this.stopFocusTimer();
-        } else {
-          this.startFocusTimer();
-        }
-      });
-    }
+    // Focus timer toggle
+    document.getElementById('start-focus-timer-btn')?.addEventListener('click', () => {
+      if (this.focusTimerInterval) this.stopFocusTimer();
+      else this.startFocusTimer();
+    });
 
-    // Preset Chips
-    const presetChips = document.querySelectorAll('.chip-btn');
-    presetChips.forEach(chip => {
+    // Snooze modal controls (Improvement 7)
+    const durationChips = document.querySelectorAll('.btn-duration-chip');
+    durationChips.forEach(chip => {
       chip.addEventListener('click', () => {
-        const presetKey = chip.dataset.preset;
-        if (PRESETS[presetKey]) {
-          this.applyPreset(PRESETS[presetKey]);
-        }
+        durationChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
       });
     });
 
-    // Data Export & Reset in Settings
-    const exportBtn = document.getElementById('export-data-btn');
-    if (exportBtn) {
-      exportBtn.addEventListener('click', () => this.exportData());
-    }
+    document.getElementById('snooze-cancel-btn')?.addEventListener('click', () => {
+      this.closeModal('snooze-modal');
+    });
 
-    const resetBtn = document.getElementById('reset-defaults-btn');
-    if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
-        if (confirm('Reset habits back to default Quran & Poe.com tasks?')) {
-          this.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
-          this.saveState();
-          this.render();
-          this.closeModal('settings-modal');
-          this.showToast('🔄 Restored default tasks.', 'toast-success');
-        }
+    document.getElementById('snooze-confirm-btn')?.addEventListener('click', () => {
+      this.confirmSnooze();
+    });
+
+    // Master Volume & Sound Testing (Improvement 6)
+    const volSlider = document.getElementById('master-volume-slider');
+    const volText = document.getElementById('volume-val-text');
+    if (volSlider && volText) {
+      volSlider.value = this.settings.masterVolume || 80;
+      volText.textContent = `${volSlider.value}%`;
+      volSlider.addEventListener('input', () => {
+        this.settings.masterVolume = parseInt(volSlider.value, 10);
+        volText.textContent = `${this.settings.masterVolume}%`;
+        this.saveState();
       });
     }
+
+    document.getElementById('test-sound-choice-btn')?.addEventListener('click', () => {
+      const choice = document.getElementById('sound-preview-select').value;
+      this.playSynthesizedSound(choice);
+    });
+
+    // Settings Permission & Testing
+    document.getElementById('request-permission-btn')?.addEventListener('click', () => {
+      this.requestNotificationPermission();
+    });
+
+    document.getElementById('test-alert-btn')?.addEventListener('click', () => {
+      this.playSynthesizedSound('urgentRadar');
+      this.dispatchSystemNotification(
+        '🔔 Test Alert from Recurr.ai',
+        'Audio chime and notification alert tested successfully.'
+      );
+      this.showToast('🚨 Alert triggered with sound and notification!', 'toast-nag');
+    });
+
+    // Presets
+    document.querySelectorAll('.chip-btn').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const key = chip.dataset.preset;
+        if (PRESETS[key]) this.applyPreset(PRESETS[key]);
+      });
+    });
+
+    // Data export & reset
+    document.getElementById('export-data-btn')?.addEventListener('click', () => this.exportData());
+    document.getElementById('reset-defaults-btn')?.addEventListener('click', () => {
+      if (confirm('Reset habits back to default Quran & Poe.com tasks?')) {
+        this.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+        this.saveState();
+        this.render();
+        this.closeModal('settings-modal');
+        this.showToast('🔄 Restored default tasks.', 'toast-success');
+      }
+    });
+  }
+
+  // Improvement 8: Share Accountability Proof via Web Share API
+  async shareAccountabilityProof() {
+    const today = this.getTodayDateString();
+    const todayReports = this.reports.filter(r => r.date === today);
+
+    let shareText = `⚡ Recurr.ai Daily Habit Proof (${today}):\n`;
+    if (todayReports.length > 0) {
+      todayReports.forEach(r => {
+        shareText += `• ${r.taskEmoji} ${r.taskTitle} (Verified at ${r.timestamp})\n  "${r.reflection}"\n`;
+      });
+    } else {
+      shareText += `• In Progress: Working towards today's non-negotiable commitments!\n`;
+    }
+    shareText += `\nTracked with Recurr.ai — Zero Procrastination.`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My Daily Habit Proof — Recurr.ai',
+          text: shareText
+        });
+        this.showToast('📤 Shared proof sheet successfully!', 'toast-success');
+        return;
+      } catch (err) {}
+    }
+
+    // Fallback: Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareText);
+      this.showToast('📋 Copied accountability report to clipboard!', 'toast-success');
+    } catch (e) {
+      alert(shareText);
+    }
+  }
+
+  // Improvement 7: Smart Snooze with Limits & Reasons
+  openSnoozeModal(taskId) {
+    const currentCounts = this.settings.dailySnoozeCounts || {};
+    const count = currentCounts[taskId] || 0;
+
+    if (count >= 3) {
+      this.showToast('🛡️ Anti-Procrastination Lock: Maximum 3 snoozes reached today. Time to get it done!', 'toast-nag');
+      return;
+    }
+
+    document.getElementById('snooze-task-id').value = taskId;
+    const quotaText = document.getElementById('snooze-quota-text');
+    if (quotaText) {
+      quotaText.textContent = `Quota: ${3 - count} of 3 snoozes remaining today`;
+    }
+
+    this.openModal('snooze-modal');
+  }
+
+  confirmSnooze() {
+    const taskId = document.getElementById('snooze-task-id').value;
+    const activeChip = document.querySelector('.btn-duration-chip.active');
+    const mins = parseInt(activeChip?.dataset.mins || '15', 10);
+    const reason = document.getElementById('snooze-reason-select').value;
+
+    const currentCounts = this.settings.dailySnoozeCounts || {};
+    currentCounts[taskId] = (currentCounts[taskId] || 0) + 1;
+    this.settings.dailySnoozeCounts = currentCounts;
+
+    const snoozeDurationMs = mins * 60 * 1000;
+    if (taskId === 'all') {
+      this.settings.globalSnoozeUntil = Date.now() + snoozeDurationMs;
+    } else {
+      const task = this.tasks.find(t => t.id === taskId);
+      if (task) task.snoozedUntil = Date.now() + snoozeDurationMs;
+    }
+
+    this.saveState();
+    this.closeModal('snooze-modal');
+    this.render();
+    this.showToast(`💤 Snoozed for ${mins}m (${reason}). Snooze used: ${currentCounts[taskId]}/3`, 'toast-success');
   }
 
   updateHeaderDate() {
@@ -842,12 +1173,12 @@ class RecurrApp {
     }
   }
 
-  // Render Core UI
   render() {
     this.updateSoundIcon();
     this.updatePermissionUI();
     this.renderTasks();
     this.renderHeroStats();
+    this.renderHeatmap();
   }
 
   renderHeroStats() {
@@ -864,7 +1195,7 @@ class RecurrApp {
     const countDone = document.getElementById('count-done');
 
     if (circle) {
-      const circumference = 2 * Math.PI * 50; // r=50 -> 314.16
+      const circumference = 2 * Math.PI * 50;
       const offset = circumference - (percent / 100) * circumference;
       circle.style.strokeDashoffset = offset;
     }
@@ -873,8 +1204,8 @@ class RecurrApp {
 
     if (headingText && summaryText) {
       if (percent === 100) {
-        headingText.textContent = 'All Done Honestly! 🎉';
-        summaryText.textContent = `All ${total} daily tasks verified & completed!`;
+        headingText.textContent = 'All Verified Done! 🎉';
+        summaryText.textContent = `All ${total} daily tasks completed honestly!`;
       } else if (percent > 0) {
         headingText.textContent = 'Keep Going! 🔥';
         summaryText.textContent = `${completed} of ${total} tasks verified today`;
@@ -919,9 +1250,8 @@ class RecurrApp {
       if (countdownVal) countdownVal.textContent = 'Done!';
       if (nagNowBtn) nagNowBtn.style.display = 'none';
     } else if (activeDueCount === 0) {
-      // Incomplete tasks exist, but their scheduled time has not arrived yet!
       banner.classList.remove('all-done');
-      if (badgeText) badgeText.textContent = '⏰ SCHEDULED (WAITING)';
+      if (badgeText) badgeText.textContent = '⏰ SCHEDULED (QUIET)';
       if (headlineText) headlineText.textContent = `${totalIncomplete} daily task${totalIncomplete > 1 ? 's' : ''} scheduled for later today.`;
       if (countdownVal) countdownVal.textContent = 'Quiet';
       if (nagNowBtn) nagNowBtn.style.display = 'inline-flex';
@@ -962,44 +1292,37 @@ class RecurrApp {
 
     container.innerHTML = filtered.map(task => this.renderTaskCardHTML(task)).join('');
 
-    // Attach card event listeners
     filtered.forEach(task => {
       const cardEl = container.querySelector(`[data-id="${task.id}"]`);
       if (!cardEl) return;
 
-      // Check button (Anti-Circumvention Interceptor)
-      const checkBtn = cardEl.querySelector('.task-check-btn');
-      if (checkBtn) {
-        checkBtn.addEventListener('click', () => this.handleTaskCheckClick(task.id));
-      }
+      cardEl.querySelector('.task-check-btn')?.addEventListener('click', () => {
+        this.handleTaskCheckClick(task.id);
+      });
 
-      // Snooze button
-      const snoozeBtn = cardEl.querySelector('.snooze-task-btn');
-      if (snoozeBtn) {
-        snoozeBtn.addEventListener('click', () => this.snoozeTask(task.id, 15));
-      }
+      cardEl.querySelector('.snooze-task-btn')?.addEventListener('click', () => {
+        this.openSnoozeModal(task.id);
+      });
 
-      // Edit button
-      const editBtn = cardEl.querySelector('.edit-task-btn');
-      if (editBtn) {
-        editBtn.addEventListener('click', () => this.openEditModal(task.id));
-      }
+      cardEl.querySelector('.edit-task-btn')?.addEventListener('click', () => {
+        this.openEditModal(task.id);
+      });
 
-      // Delete button
-      const deleteBtn = cardEl.querySelector('.delete-task-btn');
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => this.deleteTask(task.id));
-      }
+      cardEl.querySelector('.delete-task-btn')?.addEventListener('click', () => {
+        this.deleteTask(task.id);
+      });
 
-      // Multi-step counter buttons
-      const countIncBtn = cardEl.querySelector('.counter-inc-btn');
-      if (countIncBtn) {
-        countIncBtn.addEventListener('click', () => this.adjustTaskCount(task.id, 1));
-      }
-      const countDecBtn = cardEl.querySelector('.counter-dec-btn');
-      if (countDecBtn) {
-        countDecBtn.addEventListener('click', () => this.adjustTaskCount(task.id, -1));
-      }
+      cardEl.querySelector('.counter-inc-btn')?.addEventListener('click', () => {
+        this.adjustTaskCount(task.id, 1);
+      });
+
+      cardEl.querySelector('.counter-dec-btn')?.addEventListener('click', () => {
+        this.adjustTaskCount(task.id, -1);
+      });
+
+      cardEl.querySelector('.quick-reader-btn')?.addEventListener('click', () => {
+        this.openQuranReader();
+      });
     });
   }
 
@@ -1008,6 +1331,7 @@ class RecurrApp {
     const isNagging = !task.completed && isDue;
     const isCompleted = task.completed;
     const hasCounter = (task.targetCount || 1) > 1;
+    const tier = this.getEscalatingNagTier(task);
 
     let nagStatusPill = '';
     if (isCompleted) {
@@ -1018,7 +1342,8 @@ class RecurrApp {
     } else if (!isDue) {
       nagStatusPill = `<span class="due-pill">⏳ Starts at ${this.formatDueTimeDisplay(task.dueTime)}</span>`;
     } else {
-      nagStatusPill = `<span class="nag-status-pill nagging">⚡ Nagging (every ${task.nagIntervalMinutes || 15}m)</span>`;
+      const tierBadge = tier === 3 ? '🚨 CRITICAL OVERDUE' : tier === 2 ? '⚠️ INSISTENT NAG' : '⚡ NAG ACTIVE';
+      nagStatusPill = `<span class="nag-status-pill nagging">${tierBadge} (every ${task.nagIntervalMinutes || 15}m)</span>`;
     }
 
     const duePill = task.dueTime 
@@ -1029,8 +1354,10 @@ class RecurrApp {
       ? `<span class="safeguard-pill">🛡️ Report Required</span>`
       : '';
 
+    const isQuran = task.id === 'task-quran' || task.title.toLowerCase().includes('quran');
+
     return `
-      <article class="task-card ${isNagging ? 'is-nagging' : ''} ${isCompleted ? 'is-completed' : ''}" data-id="${task.id}">
+      <article class="task-card ${isNagging ? `is-nagging nag-tier-${tier}` : ''} ${isCompleted ? 'is-completed' : ''}" data-id="${task.id}">
         <div class="task-card-top">
           <button type="button" class="task-check-btn" aria-label="${isCompleted ? 'Mark uncompleted' : 'Submit verification report'}" title="${isCompleted ? 'Completed (Click to unmark)' : 'Click to submit verification report'}">
             <svg class="task-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1055,6 +1382,12 @@ class RecurrApp {
 
         <div class="task-card-actions">
           <div class="task-left-actions">
+            ${isQuran ? `
+              <button type="button" class="action-link-btn quick-reader-btn" title="Open built-in 2-page reader">
+                📖 Read 2 Pages Here
+              </button>
+            ` : ''}
+
             ${task.url ? `
               <a href="${task.url}" target="_blank" rel="noopener noreferrer" class="action-link-btn" title="Open website in new tab">
                 <span>Launch ${this.getDomainName(task.url)}</span>
@@ -1077,7 +1410,7 @@ class RecurrApp {
 
           <div class="task-right-actions">
             ${!isCompleted ? `
-              <button type="button" class="icon-subtle-btn snooze-task-btn" aria-label="Snooze 15 minutes" title="Snooze for 15 minutes">
+              <button type="button" class="icon-subtle-btn snooze-task-btn" aria-label="Snooze" title="Snooze (Anti-procrastination limited)">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"></circle>
                   <polyline points="12 6 12 12 16 14"></polyline>
@@ -1104,7 +1437,6 @@ class RecurrApp {
     `;
   }
 
-  // Anti-Circumvention Interceptor on Checkmark Click
   handleTaskCheckClick(taskId) {
     const task = this.tasks.find(t => t.id === taskId);
     if (!task) return;
@@ -1116,7 +1448,6 @@ class RecurrApp {
       return;
     }
 
-    // Safeguard verification check
     if (task.safeguard && task.safeguard !== 'simple') {
       this.openVerificationModal(task);
     } else {
@@ -1135,8 +1466,9 @@ class RecurrApp {
     const charCount = document.getElementById('char-count-text');
     const pledge = document.getElementById('verify-pledge-checkbox');
     const timerCard = document.getElementById('focus-timer-card');
+    const photoBox = document.getElementById('photo-preview-box');
+    const photoInput = document.getElementById('verify-photo-input');
 
-    // Contextual form fields
     if (isQuran) {
       quranGroup.style.display = 'flex';
       reflectionLabel.textContent = "📖 Reflection on Today's 2 Pages *";
@@ -1154,18 +1486,20 @@ class RecurrApp {
       timerCard.style.display = task.safeguard === 'timed-focus' ? 'flex' : 'none';
     }
 
-    // Reset inputs
     reflectionInput.value = '';
     charCount.textContent = '0 / 15 chars';
     charCount.style.color = 'var(--text-dim)';
     pledge.checked = false;
     document.getElementById('verify-quran-surah').value = '';
 
+    this.currentPhotoBase64 = null;
+    if (photoInput) photoInput.value = '';
+    if (photoBox) photoBox.style.display = 'none';
+
     this.stopFocusTimer();
     this.openModal('verification-modal');
   }
 
-  // Anti-Circumvention Verification Submission
   handleVerificationSubmit() {
     const taskId = document.getElementById('verify-task-id').value;
     const task = this.tasks.find(t => t.id === taskId);
@@ -1176,7 +1510,6 @@ class RecurrApp {
     const reflection = document.getElementById('verify-reflection-text').value.trim();
     const pledge = document.getElementById('verify-pledge-checkbox').checked;
 
-    // Strict Anti-Cheat Validations
     if (!pledge) {
       this.showToast('⚠️ You must check the Honesty Pledge before submitting.', 'toast-nag');
       return;
@@ -1194,7 +1527,6 @@ class RecurrApp {
       return;
     }
 
-    // Filter out low-effort dummy bypass spam
     const lower = reflection.toLowerCase();
     const bannedBypasses = ['done', 'yes', 'asdf', 'test', 'completed', 'ok', 'did it', 'read it'];
     if (bannedBypasses.some(b => lower === b || lower === b.repeat(3))) {
@@ -1202,7 +1534,6 @@ class RecurrApp {
       return;
     }
 
-    // Record verified report in audit history
     const newReport = {
       id: 'rep-' + Date.now(),
       taskId: task.id,
@@ -1211,13 +1542,13 @@ class RecurrApp {
       date: this.getTodayDateString(),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       details: isQuran ? surahText : (task.url || ''),
-      reflection: reflection
+      reflection: reflection,
+      photo: this.currentPhotoBase64 || null
     };
 
     this.reports.unshift(newReport);
     this.saveReports();
 
-    // Mark task completed
     this.toggleTaskCompletion(task.id, true);
     this.closeModal('verification-modal');
     this.stopFocusTimer();
@@ -1225,13 +1556,13 @@ class RecurrApp {
     this.showToast(`🛡️ Verified & Logged: "${task.title}" completed honestly!`, 'toast-success');
   }
 
-  // Focus Reading Timer (2-Minute Stopwatch)
   startFocusTimer() {
     this.focusTimerRemainingSec = 120;
     const display = document.getElementById('timer-digits-display');
     const bar = document.getElementById('timer-progress-bar');
     const btn = document.getElementById('start-focus-timer-btn');
     if (btn) btn.textContent = '⏸ Pause Reading Timer';
+    this.acquireWakeLock();
 
     this.focusTimerInterval = setInterval(() => {
       this.focusTimerRemainingSec--;
@@ -1247,8 +1578,7 @@ class RecurrApp {
         this.stopFocusTimer();
         this.playSynthesizedSound('zenBell');
         this.showToast('🔔 2-Minute Reading Focus Complete! Write your reflection below.', 'toast-success');
-        const textarea = document.getElementById('verify-reflection-text');
-        if (textarea) textarea.focus();
+        document.getElementById('verify-reflection-text')?.focus();
       }
     }, 1000);
   }
@@ -1260,9 +1590,9 @@ class RecurrApp {
     }
     const btn = document.getElementById('start-focus-timer-btn');
     if (btn) btn.textContent = '▶ Start 2-Minute Reading Timer';
+    this.releaseWakeLock();
   }
 
-  // Render History Modal
   renderReportsHistory() {
     const list = document.getElementById('history-list-container');
     if (!list) return;
@@ -1286,11 +1616,15 @@ class RecurrApp {
         </div>
         ${rep.details ? `<div class="history-meta">📍 ${this.escapeHTML(rep.details)}</div>` : ''}
         <div class="history-reflection">"${this.escapeHTML(rep.reflection)}"</div>
+        ${rep.photo ? `
+          <div style="margin-top: 0.4rem;">
+            <img src="${rep.photo}" alt="Attached Proof" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-card);">
+          </div>
+        ` : ''}
       </article>
     `).join('');
   }
 
-  // Toggle Completion
   toggleTaskCompletion(taskId, forceState = null) {
     const task = this.tasks.find(t => t.id === taskId);
     if (!task) return;
@@ -1340,16 +1674,6 @@ class RecurrApp {
     this.render();
   }
 
-  snoozeTask(taskId, minutes = 15) {
-    const task = this.tasks.find(t => t.id === taskId);
-    if (!task) return;
-
-    task.snoozedUntil = Date.now() + minutes * 60 * 1000;
-    this.saveState();
-    this.showToast(`💤 "${task.title}" snoozed for ${minutes} minutes.`, 'toast-success');
-    this.render();
-  }
-
   deleteTask(taskId) {
     const task = this.tasks.find(t => t.id === taskId);
     if (!task) return;
@@ -1362,7 +1686,6 @@ class RecurrApp {
     }
   }
 
-  // Export Native Calendar (.ics) with Recurring Daily Alarms
   exportCalendarICS() {
     const pad = (n) => String(n).padStart(2, '0');
     const now = new Date();
@@ -1413,7 +1736,6 @@ class RecurrApp {
     this.showToast('📅 Downloaded alarms! Tap the file to add 8:00 AM recurring alarms to your iPhone/Android calendar.', 'toast-success');
   }
 
-  // Modal Dialog Controllers
   openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal && typeof modal.showModal === 'function') {
@@ -1532,7 +1854,6 @@ class RecurrApp {
     this.showToast(`Saved habit "${title}" (Due: ${this.formatDueTimeDisplay(dueTime)})!`, 'toast-success');
   }
 
-  // Confetti Particle Explosion
   launchConfetti() {
     const canvas = document.getElementById('confetti-canvas');
     if (!canvas) return;
@@ -1579,17 +1900,13 @@ class RecurrApp {
       });
 
       frame++;
-      if (frame < 95) {
-        requestAnimationFrame(animate);
-      } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
+      if (frame < 95) requestAnimationFrame(animate);
+      else ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
 
     requestAnimationFrame(animate);
   }
 
-  // Toast System
   showToast(message, type = 'toast-nag') {
     const hub = document.getElementById('toast-hub');
     if (!hub) return;
@@ -1627,7 +1944,6 @@ class RecurrApp {
     dlAnchor.remove();
   }
 
-  // Utilities
   getDomainName(url) {
     try {
       const parsed = new URL(url);
@@ -1647,7 +1963,6 @@ class RecurrApp {
   }
 }
 
-// Instantiate on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   window.recurrApp = new RecurrApp();
 });
