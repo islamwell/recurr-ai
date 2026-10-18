@@ -213,6 +213,29 @@
         </div>
       </section>
 
+      <!-- Quranic Ayah Floating Alarm Banner (Plays Random Ayah with Recitation) -->
+      <section id="quran-alarm-banner" class="quran-alarm-card" style="display: none;" aria-live="polite">
+        <div class="quran-alarm-top">
+          <div class="quran-alarm-badge">
+            <span class="quran-sound-wave" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+            </span>
+            <span id="quran-alarm-surah-tag">Surah Ash-Sharh (94:5)</span>
+          </div>
+          <button type="button" class="btn-stop-recitation" id="stop-quran-alarm-btn" title="Stop Recitation">⏹ Stop</button>
+        </div>
+        <div class="quran-alarm-arabic" id="quran-alarm-arabic-text">
+          فَإِنَّ مَعَ الْعُسْرِ يُسْرًا
+        </div>
+        <div class="quran-alarm-english" id="quran-alarm-english-text">
+          "For indeed, with hardship [will be] ease."
+        </div>
+        <div class="quran-alarm-actions">
+          <button type="button" class="btn btn-warning-glow btn-sm" id="quran-alarm-read-now-btn">📖 Open 2-Page Reader</button>
+          <span class="reciter-tag">🎙️ Mishary Rashid Alafasy</span>
+        </div>
+      </section>
+
       <!-- Toast Notification Alert Box -->
       <div class="toast-hub" id="toast-hub" aria-live="assertive"></div>
 
@@ -224,7 +247,7 @@
         <p class="footer-brand">
           <strong>Recurr.ai</strong> — Super Easy & Beautiful Daily Nagging System
         </p>
-        <p class="footer-version" id="app-version-tag">v1.0.3 (updated 2026-10-17 23:36)</p>
+        <p class="footer-version" id="app-version-tag">v1.0.4 (updated 2026-10-19 00:07)</p>
       </div>
     </footer>
 
@@ -285,8 +308,9 @@
           <div class="form-group">
             <label for="task-sound-input" class="form-label">Nag Alert Sound</label>
             <select id="task-sound-input" class="form-select">
+              <option value="quranAyah" selected>📖 Random Quranic Ayah (Alafasy Recitation)</option>
               <option value="urgentRadar">🚨 Urgent Radar Ping</option>
-              <option value="pleasantChime" selected>🔔 Pleasant Melody Chime</option>
+              <option value="pleasantChime">🔔 Pleasant Melody Chime</option>
               <option value="zenBell">🧘 Zen Meditation Bell</option>
               <option value="retroPing">👾 Retro Arcade Blip</option>
             </select>
@@ -573,6 +597,7 @@
 
           <div class="sound-test-row">
             <select id="sound-preview-select" class="form-select text-xs">
+              <option value="quranAyah" selected>📖 Random Quran Ayah (Alafasy Recitation)</option>
               <option value="urgentRadar">🚨 Urgent Radar Ping</option>
               <option value="pleasantChime">🔔 Pleasant Melody Chime</option>
               <option value="zenBell">🧘 Zen Singing Bowl</option>

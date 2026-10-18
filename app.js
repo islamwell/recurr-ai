@@ -1,17 +1,17 @@
 /**
- * Recurr.ai — Core Application & Nag Engine (v1.0.3)
+ * Recurr.ai — Core Application & Nag Engine (v1.0.4)
  * Mobile-ready, persistent notifications & audio nag engine for daily recurring tasks.
- * Includes Top 10 Major Improvements:
- * 1. In-App 2-Page Quran Reader with Page Flipper
- * 2. Screen Wake Lock API (keeps mobile screen awake during focus & reading)
- * 3. 3-Tier Escalating Nag Urgency (Mild -> Insistent -> Drill Sergeant)
- * 4. Photo Proof & Screenshot Upload Safeguard
- * 5. 28-Day Consistency Matrix Heatmap
- * 6. Master Audio Center & Volume Slider
- * 7. Anti-Procrastination Snooze Limits (Max 3/day) with Reason Logging
- * 8. Accountability Partner Sharing via Web Share API
- * 9. PWA Mobile Home Screen Installation Prompt
- * 10. Desktop & Mobile Keyboard Shortcuts + Enhanced Haptic Patterns
+ * Includes Top 10 Major Improvements + Random Quranic Ayat Alarm Recitation Sound:
+ * 1. Random Quranic Ayat Recitations (Mishary Rashid Alafasy) for Alarm Audio
+ * 2. In-App 2-Page Quran Reader with Page Flipper
+ * 3. Screen Wake Lock API (keeps mobile screen awake during focus & reading)
+ * 4. 3-Tier Escalating Nag Urgency (Mild -> Insistent -> Drill Sergeant)
+ * 5. Photo Proof & Screenshot Upload Safeguard
+ * 6. 28-Day Consistency Matrix Heatmap
+ * 7. Master Audio Center & Volume Slider
+ * 8. Anti-Procrastination Snooze Limits (Max 3/day) with Reason Logging
+ * 9. Accountability Partner Sharing via Web Share API
+ * 10. PWA Mobile Home Screen Installation Prompt
  */
 
 // Default Initial Tasks
@@ -29,8 +29,8 @@ const DEFAULT_TASKS = [
     completed: false,
     completedDate: null,
     nagIntervalMinutes: 15,
-    nagSound: 'urgentRadar',
-    voiceNag: true,
+    nagSound: 'quranAyah',
+    voiceNag: false,
     streak: 12,
     lastNaggedTime: 0,
     snoozedUntil: 0,
@@ -68,8 +68,8 @@ const PRESETS = {
     dueTime: '08:00',
     safeguard: 'strict-report',
     nagIntervalMinutes: 15,
-    nagSound: 'urgentRadar',
-    voiceNag: true
+    nagSound: 'quranAyah',
+    voiceNag: false
   },
   poe: {
     title: 'Visit poe.com',
@@ -171,6 +171,82 @@ const QURAN_DATA = {
   }
 };
 
+// Curated Quranic Ayat for Random Alarm Recitations (Mishary Rashid Alafasy)
+const QURAN_ALARM_AYAT = [
+  {
+    ref: 'Surah Ash-Sharh (94:5–6)',
+    arabic: 'فَإِنَّ مَعَ الْعُسْرِ يُسْرًا • إِنَّ مَعَ الْعُسْرِ يُسْرًا',
+    english: 'For indeed, with hardship [will be] ease. Indeed, with hardship [will be] ease.',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/6086.mp3'
+  },
+  {
+    ref: 'Ayat Al-Kursi (2:255)',
+    arabic: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ',
+    english: 'Allah - there is no deity except Him, the Ever-Living, the Sustainer of all existence. Neither drowsiness overtakes Him nor sleep.',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/262.mp3'
+  },
+  {
+    ref: 'Surah Taha (20:114)',
+    arabic: 'وَقُل رَّبِّ زِدْنِي عِلْمًا',
+    english: 'And say, "My Lord, increase me in knowledge."',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/2462.mp3'
+  },
+  {
+    ref: 'Surah Al-Kahf (18:10)',
+    arabic: 'رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا',
+    english: 'Our Lord, grant us from Yourself mercy and prepare for us from our affair right guidance.',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/2150.mp3'
+  },
+  {
+    ref: 'Surah Al-Baqarah (2:286)',
+    arabic: 'رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ ۖ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا',
+    english: 'Our Lord, do not burden us with that which we have no ability to bear. And pardon us; and forgive us; and have mercy upon us.',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/293.mp3'
+  },
+  {
+    ref: 'Surah Az-Zumar (39:53)',
+    arabic: 'قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ ۚ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا',
+    english: 'Say, "O My servants who have transgressed against themselves, do not despair of the mercy of Allah. Indeed, Allah forgives all sins."',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/4111.mp3'
+  },
+  {
+    ref: 'Surah Ali \'Imran (3:139)',
+    arabic: 'وَلَا تَهِنُوا وَلَا تَحْزَنُوا وَأَنتُمُ الْأَعْلَوْنَ إِن كُنتُم مُّؤْمِنِينَ',
+    english: 'So do not weaken and do not grieve, and you will be superior if you are [true] believers.',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/432.mp3'
+  },
+  {
+    ref: 'Surah Ar-Ra\'d (13:28)',
+    arabic: 'الَّذِينَ آمَنُوا وَتَطْمَئِنُّ قُلُوبُهُم بِذِكْرِ اللَّهِ ۗ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ',
+    english: 'Those who have believed and whose hearts are assured by the remembrance of Allah. Unquestionably, by the remembrance of Allah hearts are assured.',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1735.mp3'
+  },
+  {
+    ref: 'Surah Al-Mulk (67:1)',
+    arabic: 'تَبَارَكَ الَّذِي بِيَدِهِ الْمُلْكُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ',
+    english: 'Blessed is He in whose hand is dominion, and He is over all things competent.',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/5242.mp3'
+  },
+  {
+    ref: 'Surah Al-Fatihah (1:1–2)',
+    arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ • الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
+    english: 'In the name of Allah, the Entirely Merciful, the Especially Merciful. [All] praise is [due] to Allah, Lord of the worlds.',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3'
+  },
+  {
+    ref: 'Surah Ibrahim (14:7)',
+    arabic: 'وَإِذْ تَأَذَّنَ رَبُّكُمْ لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ',
+    english: 'And [remember] when your Lord proclaimed, "If you are grateful, I will surely increase you [in favor]."',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1757.mp3'
+  },
+  {
+    ref: 'Surah Al-Anbiya (21:87)',
+    arabic: 'لَّا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ',
+    english: 'There is no deity except You; exalted are You. Indeed, I have been of the wrongdoers.',
+    audioUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/2570.mp3'
+  }
+];
+
 class RecurrApp {
   constructor() {
     this.tasks = [];
@@ -207,6 +283,10 @@ class RecurrApp {
     // Stored photo for verification
     this.currentPhotoBase64 = null;
 
+    // Quran Ayah Alarm Audio Player
+    this.quranAudio = null;
+    this.currentQuranAyah = null;
+
     this.init();
   }
 
@@ -233,6 +313,14 @@ class RecurrApp {
     try {
       const storedTasks = localStorage.getItem('recurr_tasks');
       this.tasks = storedTasks ? JSON.parse(storedTasks) : JSON.parse(JSON.stringify(DEFAULT_TASKS));
+      if (Array.isArray(this.tasks)) {
+        this.tasks.forEach(t => {
+          if (t.id === 'task-quran' && (t.nagSound === 'urgentRadar' || !t.nagSound)) {
+            t.nagSound = 'quranAyah';
+            t.voiceNag = false;
+          }
+        });
+      }
 
       const storedReports = localStorage.getItem('recurr_reports');
       this.reports = storedReports ? JSON.parse(storedReports) : [
@@ -385,8 +473,81 @@ class RecurrApp {
     window.addEventListener('touchstart', unlock, { once: true });
   }
 
+  playQuranAyahRecitation(specificIndex = null) {
+    if (!this.settings.soundEnabled) return;
+    this.stopQuranAyahRecitation(false);
+
+    let ayah;
+    if (specificIndex !== null && QURAN_ALARM_AYAT[specificIndex]) {
+      ayah = QURAN_ALARM_AYAT[specificIndex];
+    } else {
+      const randIdx = Math.floor(Math.random() * QURAN_ALARM_AYAT.length);
+      ayah = QURAN_ALARM_AYAT[randIdx];
+    }
+    this.currentQuranAyah = ayah;
+
+    // Update banner UI elements
+    const banner = document.getElementById('quran-alarm-banner');
+    const surahTag = document.getElementById('quran-alarm-surah-tag');
+    const arabicText = document.getElementById('quran-alarm-arabic-text');
+    const englishText = document.getElementById('quran-alarm-english-text');
+
+    if (banner && surahTag && arabicText && englishText) {
+      surahTag.textContent = ayah.ref;
+      arabicText.textContent = ayah.arabic;
+      englishText.textContent = `"${ayah.english}"`;
+      banner.style.display = 'flex';
+      try {
+        banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    try {
+      this.quranAudio = new Audio(ayah.audioUrl);
+      this.quranAudio.volume = Math.max(0.05, (this.settings.masterVolume || 80) / 100);
+      const playPromise = this.quranAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.warn('Quran audio autoplay restricted or failed:', err);
+          this.playSynthesizedSound('zenBell');
+        });
+      }
+
+      this.quranAudio.onended = () => {
+        this.stopQuranAyahRecitation(false);
+      };
+    } catch (err) {
+      console.warn('Audio construction error, fallback to chime:', err);
+      this.playSynthesizedSound('zenBell');
+    }
+  }
+
+  stopQuranAyahRecitation(hideBanner = true) {
+    if (this.quranAudio) {
+      try {
+        this.quranAudio.pause();
+        this.quranAudio.currentTime = 0;
+      } catch (e) {
+        // ignore
+      }
+      this.quranAudio = null;
+    }
+    if (hideBanner) {
+      const banner = document.getElementById('quran-alarm-banner');
+      if (banner) banner.style.display = 'none';
+    }
+  }
+
   playSynthesizedSound(type) {
     if (!this.settings.soundEnabled) return;
+
+    if (type === 'quranAyah') {
+      this.playQuranAyahRecitation();
+      return;
+    }
+
     try {
       if (!this.audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -633,9 +794,13 @@ class RecurrApp {
 
   triggerTaskNag(task) {
     const tier = this.getEscalatingNagTier(task);
+    const isQuranTask = task.nagSound === 'quranAyah' || task.id === 'task-quran';
 
-    // Escalating sound & haptics based on overdue urgency
-    if (tier === 3) {
+    // Prioritize Quran recitation if selected or default for Quran habit
+    if (isQuranTask) {
+      this.playQuranAyahRecitation();
+      if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+    } else if (tier === 3) {
       this.playSynthesizedSound('urgentRadar');
       if ('vibrate' in navigator) navigator.vibrate([300, 100, 300, 100, 400]);
     } else {
@@ -643,14 +808,15 @@ class RecurrApp {
       if ('vibrate' in navigator) navigator.vibrate([150, 75, 150]);
     }
 
-    if (task.voiceNag) {
+    // Only speak synthetic TTS if not playing holy Quran recitation to preserve reverence
+    if (task.voiceNag && !isQuranTask) {
       const urgencyPrefix = tier === 3 ? "Urgent attention required! " : "";
       this.speakVoiceNudge(`${urgencyPrefix}Reminder: It is time to complete your ${task.title}.`);
     }
 
-    const notifTitle = tier === 3 
-      ? `🚨 CRITICAL NAG: ${task.emoji} ${task.title}` 
-      : `⚡ NAG ALERT: ${task.emoji} ${task.title}`;
+    const notifTitle = isQuranTask
+      ? `📖 QURAN NAG: ${task.emoji} ${task.title}`
+      : (tier === 3 ? `🚨 CRITICAL NAG: ${task.emoji} ${task.title}` : `⚡ NAG ALERT: ${task.emoji} ${task.title}`);
 
     const notifBody = `Scheduled for ${this.formatDueTimeDisplay(task.dueTime)}. Keep your ${task.streak}-day streak alive!`;
 
@@ -913,6 +1079,17 @@ class RecurrApp {
       this.openSnoozeModal('all');
     });
 
+    // Quran Alarm Banner Controls
+    document.getElementById('stop-quran-alarm-btn')?.addEventListener('click', () => {
+      this.stopQuranAyahRecitation(true);
+      this.showToast('⏹ Quran recitation stopped.', 'toast-success');
+    });
+
+    document.getElementById('quran-alarm-read-now-btn')?.addEventListener('click', () => {
+      this.stopQuranAyahRecitation(true);
+      this.openQuranReader();
+    });
+
     // Filter tabs
     const filterTabs = document.querySelectorAll('.tab-btn');
     filterTabs.forEach(tab => {
@@ -1125,6 +1302,7 @@ class RecurrApp {
   }
 
   confirmSnooze() {
+    this.stopQuranAyahRecitation(true);
     const taskId = document.getElementById('snooze-task-id').value;
     const activeChip = document.querySelector('.btn-duration-chip.active');
     const mins = parseInt(activeChip?.dataset.mins || '15', 10);
@@ -1633,6 +1811,7 @@ class RecurrApp {
     task.completed = newState;
 
     if (newState) {
+      this.stopQuranAyahRecitation(true);
       task.currentCount = task.targetCount || 1;
       task.completedDate = this.getTodayDateString();
       task.lastCompletedDate = task.completedDate;

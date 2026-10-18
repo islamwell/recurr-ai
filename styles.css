@@ -1822,3 +1822,129 @@ kbd {
   gap: 0.5rem;
 }
 
+/* ==========================================================================
+   Quranic Ayah Floating Alarm Banner & Audio Equalizer
+   ========================================================================== */
+.quran-alarm-card {
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.92) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-top: 1.25rem;
+  box-shadow: 0 12px 35px rgba(5, 150, 105, 0.25), 0 0 20px rgba(16, 185, 129, 0.15);
+  animation: quranBannerPulse 3s ease-in-out infinite;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes quranBannerPulse {
+  0%, 100% {
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 12px 35px rgba(5, 150, 105, 0.2);
+  }
+  50% {
+    border-color: rgba(245, 158, 11, 0.7);
+    box-shadow: 0 14px 40px rgba(245, 158, 11, 0.35);
+  }
+}
+
+.quran-alarm-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quran-alarm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(6, 78, 59, 0.8);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #a7f3d0;
+}
+
+.quran-sound-wave {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 14px;
+}
+
+.quran-sound-wave span {
+  width: 3px;
+  background: #34d399;
+  border-radius: 2px;
+  animation: soundWaveAnim 1.2s ease-in-out infinite;
+}
+
+.quran-sound-wave span:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+.quran-sound-wave span:nth-child(2) { height: 14px; animation-delay: 0.3s; }
+.quran-sound-wave span:nth-child(3) { height: 9px; animation-delay: 0.2s; }
+.quran-sound-wave span:nth-child(4) { height: 12px; animation-delay: 0.4s; }
+
+@keyframes soundWaveAnim {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+.btn-stop-recitation {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-stop-recitation:hover {
+  background: rgba(239, 68, 68, 0.4);
+  color: #ffffff;
+  transform: scale(1.04);
+}
+
+.quran-alarm-arabic {
+  font-family: 'Amiri', 'Traditional Arabic', 'Scheherazade', serif;
+  font-size: 1.55rem;
+  line-height: 1.8;
+  direction: rtl;
+  text-align: center;
+  color: #fef08a;
+  text-shadow: 0 0 12px rgba(253, 224, 71, 0.3);
+  padding: 0.35rem 0.5rem;
+}
+
+.quran-alarm-english {
+  font-size: 0.92rem;
+  font-style: italic;
+  text-align: center;
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+
+.quran-alarm-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reciter-tag {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+
