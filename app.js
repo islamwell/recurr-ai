@@ -1534,6 +1534,16 @@ class RecurrApp {
 
     const isQuran = task.id === 'task-quran' || task.title.toLowerCase().includes('quran');
 
+    const ctaLabel = isCompleted
+      ? '✓ Completed — Tap to Unmark'
+      : (task.safeguard && task.safeguard !== 'simple'
+          ? (isQuran ? '📖 I Read My 2 Pages — Submit Report' : '✅ I Did It — Submit Report')
+          : '✅ Mark as Done');
+
+    const ctaClass = isCompleted
+      ? 'task-cta-btn task-cta-done'
+      : (isNagging ? `task-cta-btn task-cta-active nag-cta-tier-${tier}` : 'task-cta-btn task-cta-pending');
+
     return `
       <article class="task-card ${isNagging ? `is-nagging nag-tier-${tier}` : ''} ${isCompleted ? 'is-completed' : ''}" data-id="${task.id}">
         <div class="task-card-top">
@@ -1556,35 +1566,6 @@ class RecurrApp {
               <span class="streak-pill">🔥 ${task.streak || 0} day streak</span>
             </div>
           </div>
-        </div>
-
-        <div class="task-card-actions">
-          <div class="task-left-actions">
-            ${isQuran ? `
-              <button type="button" class="action-link-btn quick-reader-btn" title="Open built-in 2-page reader">
-                📖 Read 2 Pages Here
-              </button>
-            ` : ''}
-
-            ${task.url ? `
-              <a href="${task.url}" target="_blank" rel="noopener noreferrer" class="action-link-btn" title="Open website in new tab">
-                <span>Launch ${this.getDomainName(task.url)}</span>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                  <polyline points="15 3 21 3 21 9"></polyline>
-                  <line x1="10" y1="14" x2="21" y2="3"></line>
-                </svg>
-              </a>
-            ` : ''}
-
-            ${hasCounter ? `
-              <div class="counter-box" title="Pages completed today">
-                <button type="button" class="counter-btn counter-dec-btn" aria-label="Decrement pages">-</button>
-                <span class="counter-text">${task.currentCount || 0} / ${task.targetCount} pages</span>
-                <button type="button" class="counter-btn counter-inc-btn" aria-label="Increment pages">+</button>
-              </div>
-            ` : ''}
-          </div>
 
           <div class="task-right-actions">
             ${!isCompleted ? `
@@ -1595,14 +1576,12 @@ class RecurrApp {
                 </svg>
               </button>
             ` : ''}
-
             <button type="button" class="icon-subtle-btn edit-task-btn" aria-label="Edit Habit" title="Edit this habit">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
             </button>
-
             <button type="button" class="icon-subtle-btn delete-btn delete-task-btn" aria-label="Delete Habit" title="Delete habit">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -1611,6 +1590,23 @@ class RecurrApp {
             </button>
           </div>
         </div>
+
+        ${isQuran || task.url || hasCounter ? `
+        <div class="task-aux-strip">
+          ${isQuran ? `<button type="button" class="action-link-btn quick-reader-btn">📖 Read 2 Pages Here</button>` : ''}
+          ${task.url ? `<a href="${task.url}" target="_blank" rel="noopener noreferrer" class="action-link-btn">Launch ${this.getDomainName(task.url)} ↗</a>` : ''}
+          ${hasCounter ? `
+            <div class="counter-box">
+              <button type="button" class="counter-btn counter-dec-btn" aria-label="Decrement">-</button>
+              <span class="counter-text">${task.currentCount || 0} / ${task.targetCount}</span>
+              <button type="button" class="counter-btn counter-inc-btn" aria-label="Increment">+</button>
+            </div>
+          ` : ''}
+        </div>` : ''}
+
+        <button type="button" class="${ctaClass} task-check-btn" aria-label="${ctaLabel}">
+          ${ctaLabel}
+        </button>
       </article>
     `;
   }

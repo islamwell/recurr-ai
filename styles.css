@@ -616,7 +616,16 @@ button {
   display: flex;
   align-items: flex-start;
   gap: 0.85rem;
+  justify-content: space-between;
 }
+
+.task-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
 
 /* Checkmark Action Button */
 .task-check-btn {
@@ -719,15 +728,89 @@ button {
   font-weight: 600;
 }
 
-/* Action Strip (Link, Counter, Snooze, Delete) */
-.task-card-actions {
+/* Action Strip (Link, Counter) */
+.task-aux-strip {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  flex-wrap: wrap;
   padding-top: 0.5rem;
   border-top: 1px solid var(--border-subtle);
 }
+
+/* Full-Width Primary CTA Button */
+.task-cta-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  transition: transform var(--transition-bounce), box-shadow var(--transition-fast), opacity var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.task-cta-btn:active {
+  transform: scale(0.97);
+}
+
+/* Pending (not yet due) */
+.task-cta-pending {
+  background: rgba(99, 102, 241, 0.15);
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.task-cta-pending:hover {
+  background: rgba(99, 102, 241, 0.25);
+  color: #ffffff;
+}
+
+/* Active / Nagging — tier-based urgency */
+.task-cta-active {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  color: #000000;
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.45);
+}
+
+.task-cta-active:hover {
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.65);
+  transform: translateY(-1px) scale(1.005);
+}
+
+.task-cta-active.nag-cta-tier-2 {
+  background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%);
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.5);
+}
+
+.task-cta-active.nag-cta-tier-3 {
+  background: linear-gradient(135deg, #dc2626 0%, #f87171 100%);
+  box-shadow: 0 4px 22px rgba(239, 68, 68, 0.6);
+  animation: ctaPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 4px 22px rgba(239, 68, 68, 0.6); }
+  50% { box-shadow: 0 6px 32px rgba(239, 68, 68, 0.9); }
+}
+
+/* Completed state */
+.task-cta-done {
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-size: 0.85rem;
+}
+
+.task-cta-done:hover {
+  background: rgba(16, 185, 129, 0.2);
+  color: #ffffff;
+}
+
+
 
 .task-left-actions {
   display: flex;
