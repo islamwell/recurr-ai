@@ -2,7 +2,7 @@
   "name": "Recurr.ai — Persistent Daily Habit & Task Nag",
   "short_name": "Recurr.ai",
   "description": "Never forget your daily commitments. Nags you with persistent audio and push alerts until you complete them.",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

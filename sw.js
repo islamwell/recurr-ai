@@ -1,8 +1,7 @@
 // Service Worker for Recurr.ai PWA
-const CACHE_NAME = 'recurr-ai-v1.0.6';
+const CACHE_NAME = 'recurr-ai-v1.0.7';
 const ASSETS_TO_CACHE = [
   './',
-  './index.html',
   './styles.css',
   './app.js',
   './manifest.webmanifest',
@@ -59,7 +58,7 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         });
       });
-    }).catch(() => caches.match('./index.html'))
+    }).catch(() => caches.match('./'))
   );
 });
 
@@ -85,7 +84,7 @@ self.addEventListener('notificationclick', (event) => {
         }
       }
       if (self.clients.openWindow) {
-        return self.clients.openWindow('./index.html');
+        return self.clients.openWindow('./');
       }
     })
   );

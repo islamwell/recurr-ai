@@ -1,5 +1,5 @@
 /**
- * Recurr.ai — Core Application & Nag Engine (v1.0.6)
+ * Recurr.ai — Core Application & Nag Engine (v1.0.7)
  * Mobile-ready, persistent notifications & audio nag engine for daily recurring tasks.
  * Includes Top 10 Major Improvements + Random Quranic Ayat Alarm Recitation Sound:
  * 1. Random Quranic Ayat Recitations (Mishary Rashid Alafasy) for Alarm Audio
