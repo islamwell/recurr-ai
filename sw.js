@@ -1,5 +1,5 @@
 // Service Worker for Recurr.ai PWA
-const CACHE_NAME = 'recurr-ai-v1.0.4';
+const CACHE_NAME = 'recurr-ai-v1.0.6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -43,9 +43,9 @@ self.addEventListener('fetch', (event) => {
       if (cachedResponse) {
         // Fetch in background to update cache (stale-while-revalidate)
         fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
+          if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith('http')) {
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse);
+              cache.put(event.request, networkResponse.clone());
             });
           }
         }).catch(() => {});
